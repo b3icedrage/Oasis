@@ -11,28 +11,34 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
-             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
-             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+
     signingConfigs {
         release {
-            def keystorePath = System.getenv('KEYSTORE_PATH') ?: 'glitchit.keystore'
-            def keystoreFile = file(keystorePath)
-            if (keystoreFile.exists()) {
-                storeFile keystoreFile
-                storePassword System.getenv('KEYSTORE_PASSWORD') ?: ''
-                keyAlias System.getenv('KEY_ALIAS') ?: 'glitchit'
-                keyPassword System.getenv('KEY_PASSWORD') ?: ''
+            def keystorePath = System.getenv('KEYSTORE_PATH')
+            if (keystorePath != null) {
+                def keystoreFile = file(keystorePath)
+                if (keystoreFile.exists()) {
+                    storeFile keystoreFile
+                    storePassword System.getenv('KEYSTORE_PASSWORD')
+                    keyAlias System.getenv('KEY_ALIAS') ?: 'glitchit'
+                    keyPassword System.getenv('KEY_PASSWORD')
+                }
             }
         }
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            try {
+                signingConfig signingConfigs.release
+            } catch (Exception e) {
+                // No signing config available, build unsigned
+            }
         }
     }
 }
@@ -63,5 +69,5 @@ try {
         apply plugin: 'com.google.gms.google-services'
     }
 } catch(Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+    logger.info("google-services.json not found, google-services plugin not applied.")
 }
