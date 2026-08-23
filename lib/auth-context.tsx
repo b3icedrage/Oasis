@@ -106,20 +106,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const activateVerification = useCallback(
     async (verificationKey: string): Promise<boolean> => {
-      const q = query(
-        collection(db, "users"),
-        where("verificationKey", "==", verificationKey),
-      );
-      const snap = await getDocs(q);
-      if (snap.empty) return false;
+      if (!user) return false;
 
-      const userDoc = snap.docs[0];
-      await updateDoc(doc(db, "users", userDoc.id), { isVerified: true });
+      // Read the current user's document directly
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (!userDoc.exists()) return false;
 
-      // Update local state if it's the current user
-      if (user && userDoc.id === user.uid) {
-        setProfile((prev) => (prev ? { ...prev, isVerified: true } : prev));
-      }
+      const data = userDoc.data() as UserProfile;
+      if (data.verificationKey !== verificationKey) return false;
+
+      // Key matches — activate verification
+      await updateDoc(doc(db, "users", user.uid), { isVerified: true });
+      setProfile((prev) => (prev ? { ...prev, isVerified: true } : prev));
       return true;
     },
     [user],
