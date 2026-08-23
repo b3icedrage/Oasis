@@ -11,20 +11,17 @@ import {
   getDoc,
   setDoc,
   updateDoc,
-  collection,
-  query,
-  where,
-  getDocs,
 } from "firebase/firestore";
-import * as Crypto from "expo-crypto";
 import { auth, db } from "./firebase";
+
+const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
-  verificationKey: string | null;
   isVerified: boolean;
+  verifiedUntil: number | null;
   createdAt: number;
 }
 
@@ -39,8 +36,8 @@ interface AuthContextType {
   ) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  activateVerification: (verificationKey: string) => Promise<boolean>;
-  generateVerificationKey: () => Promise<string>;
+  activateVerification: () => Promise<boolean>;
+  isVerificationActive: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,6 +47,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Check if verification is currently active (not expired)
+  const isVerificationActive =
+    profile?.isVerified === true &&
+    profile?.verifiedUntil != null &&
+    profile.verifiedUntil > Date.now();
+
   // Listen to Firebase auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -57,7 +60,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (firebaseUser) {
         const snap = await getDoc(doc(db, "users", firebaseUser.uid));
         if (snap.exists()) {
-          setProfile(snap.data() as UserProfile);
+          const data = snap.data() as UserProfile;
+          // Auto-expire verification if past the date
+          if (
+            data.isVerified &&
+            data.verifiedUntil &&
+            data.verifiedUntil < Date.now()
+          ) {
+            await updateDoc(doc(db, "users", firebaseUser.uid), {
+              isVerified: false,
+            });
+            data.isVerified = false;
+          }
+          setProfile(data);
         }
       } else {
         setProfile(null);
@@ -74,8 +89,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         uid: cred.user.uid,
         email,
         displayName,
-        verificationKey: null,
         isVerified: false,
+        verifiedUntil: null,
         createdAt: Date.now(),
       };
       await setDoc(doc(db, "users", cred.user.uid), userProfile);
@@ -83,14 +98,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [],
   );
-
-  const generateVerificationKey = useCallback(async (): Promise<string> => {
-    if (!user) throw new Error("Not authenticated");
-    const newKey = Crypto.randomUUID();
-    await updateDoc(doc(db, "users", user.uid), { verificationKey: newKey });
-    setProfile((prev) => (prev ? { ...prev, verificationKey: newKey } : prev));
-    return newKey;
-  }, [user]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {
@@ -104,28 +111,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
   }, []);
 
-  const activateVerification = useCallback(
-    async (verificationKey: string): Promise<boolean> => {
-      if (!user) return false;
+  // Called after successful payment redirect — activates 1-month verification
+  const activateVerification = useCallback(async (): Promise<boolean> => {
+    if (!user) return false;
 
-      // Read the current user's document directly
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (!userDoc.exists()) return false;
-
-      const data = userDoc.data() as UserProfile;
-      if (data.verificationKey !== verificationKey) return false;
-
-      // Key matches — activate verification
-      await updateDoc(doc(db, "users", user.uid), { isVerified: true });
-      setProfile((prev) => (prev ? { ...prev, isVerified: true } : prev));
-      return true;
-    },
-    [user],
-  );
+    const verifiedUntil = Date.now() + ONE_MONTH_MS;
+    await updateDoc(doc(db, "users", user.uid), {
+      isVerified: true,
+      verifiedUntil,
+    });
+    setProfile((prev) =>
+      prev ? { ...prev, isVerified: true, verifiedUntil } : prev,
+    );
+    return true;
+  }, [user]);
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signUp, signIn, signOut, activateVerification, generateVerificationKey }}
+      value={{
+        user,
+        profile,
+        loading,
+        signUp,
+        signIn,
+        signOut,
+        activateVerification,
+        isVerificationActive,
+      }}
     >
       {children}
     </AuthContext.Provider>

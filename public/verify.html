@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GlitchIt — Verify</title>
+  <title>GlitchIt — Verified!</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -25,23 +25,46 @@
       width: 100%;
       text-align: center;
     }
-    .logo { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    .logo { font-size: 32px; font-weight: 800; margin-bottom: 24px; }
     .logo span { color: #7c3aed; }
-    .status { margin: 24px 0; font-size: 18px; font-weight: 600; }
-    .status.success { color: #22c55e; }
-    .status.error { color: #ef4444; }
-    .status.loading { color: #888; }
-    .key-box {
-      background: #0d0d16;
-      border: 1px solid #2a2a3a;
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-family: monospace;
+    .checkmark {
+      width: 80px;
+      height: 80px;
+      border-radius: 40px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 2px solid rgba(34, 197, 94, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .checkmark svg { width: 40px; height: 40px; }
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #22c55e;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 15px;
+      color: #888;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 20px;
+      padding: 10px 20px;
+      margin-bottom: 32px;
+    }
+    .badge-text {
       font-size: 14px;
-      color: #7c3aed;
-      word-break: break-all;
-      margin: 16px 0;
-      user-select: all;
+      font-weight: 600;
+      color: #3b82f6;
     }
     .btn {
       display: inline-block;
@@ -54,64 +77,50 @@
       font-weight: 700;
       cursor: pointer;
       text-decoration: none;
-      margin-top: 16px;
     }
     .btn:hover { background: #6d28d9; }
-    .hint { color: #888; font-size: 13px; margin-top: 16px; line-height: 1.5; }
+    .hint {
+      color: #666;
+      font-size: 12px;
+      margin-top: 16px;
+    }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="logo">Glitch<span>It</span></div>
-    <div id="status" class="status loading">Verifying your payment…</div>
-    <div id="key-section" style="display:none;">
-      <p style="color:#888; font-size:14px; margin-bottom:8px;">Your verification key:</p>
-      <div id="key" class="key-box"></div>
+
+    <div class="checkmark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
     </div>
-    <div id="action-section" style="display:none;">
-      <a id="open-app" class="btn" href="#">Open GlitchIt</a>
-      <p class="hint">
-        Tap <strong>Open GlitchIt</strong> to activate your verified badge.<br/>
-        If nothing happens, copy the key above and open it manually in the app.
-      </p>
+
+    <div class="title">Account Fully Verified!</div>
+    <div class="subtitle">
+      Your GlitchIt verified badge is now active for 1 month.
     </div>
+
+    <div class="badge">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      <span class="badge-text">GlitchIt Verified</span>
+    </div>
+
+    <a id="open-app" class="btn" href="glitchit://verify">Open GlitchIt</a>
+
+    <p class="hint">
+      Tap <strong>Open GlitchIt</strong> to see your blue tick badge.<br/>
+      Verification expires in 30 days. Pay again to renew.
+    </p>
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const key = params.get('key');
-    const statusEl = document.getElementById('status');
-    const keySection = document.getElementById('key-section');
-    const keyEl = document.getElementById('key');
-    const actionSection = document.getElementById('action-section');
-    const openBtn = document.getElementById('open-app');
+    // Try to open the app automatically
+    window.location.href = 'glitchit://verify';
 
-    if (!key) {
-      statusEl.textContent = 'No verification key found.';
-      statusEl.className = 'status error';
-    } else {
-      // Show the key
-      keyEl.textContent = key;
-      keySection.style.display = 'block';
-
-      // Deep link into the app
-      const deepLink = 'glitchit://verify?key=' + key;
-      openBtn.href = deepLink;
-
-      // Auto-redirect after a short delay
-      statusEl.textContent = '✅ Payment received!';
-      statusEl.className = 'status success';
-      actionSection.style.display = 'block';
-
-      // Try to open the app automatically
-      window.location.href = deepLink;
-
-      // Fallback: if the app isn't installed, show the manual option
-      setTimeout(function() {
-        statusEl.textContent = 'Open GlitchIt to activate your badge';
-        statusEl.className = 'status loading';
-      }, 3000);
-    }
+    // If app isn't installed, the page stays visible as a success screen
   </script>
 </body>
 </html>

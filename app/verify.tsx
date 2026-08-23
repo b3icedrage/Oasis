@@ -1,49 +1,44 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth-context";
 
 export default function VerifyScreen() {
-  const { key } = useLocalSearchParams<{ key: string }>();
   const { activateVerification, user } = useAuth();
   const router = useRouter();
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [message, setMessage] = useState("Activating your verified badge...");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading",
+  );
+  const [message, setMessage] = useState("Activating your verification...");
 
   useEffect(() => {
     async function activate() {
-      if (!key) {
-        setStatus("error");
-        setMessage("No verification key provided.");
-        return;
-      }
-
       try {
-        const success = await activateVerification(key as string);
+        const success = await activateVerification();
         if (success) {
           setStatus("success");
-          setMessage("✅ You are now GlitchIt Verified!");
+          setMessage("Account Fully Verified for 1 Month!");
         } else {
           setStatus("error");
-          setMessage("Invalid verification key. Please try again.");
+          setMessage("Could not activate verification. Please try again.");
         }
       } catch {
         setStatus("error");
         setMessage("Something went wrong. Please try again.");
       }
 
-      // Navigate back to home after 2 seconds
+      // Navigate back to home after 2.5 seconds
       setTimeout(() => {
         if (user) {
           router.replace("/(app)");
         } else {
           router.replace("/(auth)/login");
         }
-      }, 2000);
+      }, 2500);
     }
 
     activate();
-  }, [key]);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -57,6 +52,12 @@ export default function VerifyScreen() {
         <>
           <Text style={styles.successIcon}>✓</Text>
           <Text style={styles.successText}>{message}</Text>
+          <Text style={styles.successSub}>
+            Your blue tick badge is now active.
+          </Text>
+          <Text style={styles.successSub}>
+            Expires in 30 days. Pay again to renew.
+          </Text>
         </>
       )}
       {status === "error" && (
@@ -90,9 +91,16 @@ const styles = StyleSheet.create({
   },
   successText: {
     color: "#22c55e",
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700",
     textAlign: "center",
+    marginBottom: 12,
+  },
+  successSub: {
+    color: "#888",
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
   },
   errorIcon: {
     fontSize: 64,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Alert,
   Linking,
-  ActivityIndicator,
 } from "react-native";
 import { useAuth } from "../../lib/auth-context";
 
@@ -14,32 +13,22 @@ const PAYMENT_URL = "https://store.pesapal.com/monthlyverifications";
 const BRIDGE_URL = "https://glitchit-749c0.web.app/verify";
 
 export default function HomeScreen() {
-  const { profile, signOut, generateVerificationKey } = useAuth();
-  const [generating, setGenerating] = useState(false);
+  const { profile, signOut, isVerificationActive } = useAuth();
 
-  const handleGetVerified = async () => {
-    if (!profile || generating) return;
-    setGenerating(true);
-    try {
-      const key = await generateVerificationKey();
-      const callbackUrl = `${BRIDGE_URL}?key=${key}`;
-      const url = `${PAYMENT_URL}?callback=${encodeURIComponent(callbackUrl)}`;
-      Alert.alert(
-        "Get Verified",
-        "You'll be redirected to Pesapal to complete payment. After payment, your badge will activate automatically.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Proceed",
-            onPress: () => Linking.openURL(url),
-          },
-        ],
-      );
-    } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to generate verification key.");
-    } finally {
-      setGenerating(false);
-    }
+  const handleGetVerified = () => {
+    if (!profile) return;
+    const url = `${PAYMENT_URL}?callback=${encodeURIComponent(BRIDGE_URL)}`;
+    Alert.alert(
+      "Get Verified",
+      "You'll be redirected to Pesapal to complete payment. After payment, your blue tick badge will activate for 1 month.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Proceed",
+          onPress: () => Linking.openURL(url),
+        },
+      ],
+    );
   };
 
   const handleSignOut = async () => {
@@ -48,6 +37,17 @@ export default function HomeScreen() {
     } catch (e: any) {
       Alert.alert("Error", e.message);
     }
+  };
+
+  // Format expiry date
+  const formatExpiry = () => {
+    if (!profile?.verifiedUntil) return null;
+    const date = new Date(profile.verifiedUntil);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   return (
@@ -62,43 +62,61 @@ export default function HomeScreen() {
 
       {/* Profile Card */}
       <View style={styles.card}>
-        <View style={styles.avatarCircle}>
-          <Text style={styles.avatarLetter}>
-            {profile?.displayName?.charAt(0)?.toUpperCase() || "?"}
-          </Text>
+        <View style={styles.avatarContainer}>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarLetter}>
+              {profile?.displayName?.charAt(0)?.toUpperCase() || "?"}
+            </Text>
+          </View>
+          {/* Blue tick badge on avatar */}
+          {isVerificationActive && (
+            <View style={styles.blueTick}>
+              <Text style={styles.blueTickIcon}>✓</Text>
+            </View>
+          )}
         </View>
 
         <Text style={styles.displayName}>{profile?.displayName || "User"}</Text>
         <Text style={styles.email}>{profile?.email}</Text>
 
-        {/* Verification Badge */}
-        <View style={styles.badgeRow}>
-          {profile?.isVerified ? (
-            <View style={styles.verifiedBadge}>
-              <Text style={styles.badgeIcon}>✓</Text>
-              <Text style={styles.badgeText}>GlitchIt Verified</Text>
-            </View>
-          ) : (
-            <View style={styles.unverifiedBadge}>
-              <Text style={styles.badgeIconUnverified}>○</Text>
-              <Text style={styles.badgeTextUnverified}>Not Verified</Text>
-            </View>
-          )}
-        </View>
+        {/* Verification Status */}
+        {isVerificationActive ? (
+          <View style={styles.verifiedBadge}>
+            <Text style={styles.badgeIcon}>✓</Text>
+            <Text style={styles.badgeText}>GlitchIt Verified</Text>
+          </View>
+        ) : (
+          <View style={styles.unverifiedBadge}>
+            <Text style={styles.badgeIconUnverified}>○</Text>
+            <Text style={styles.badgeTextUnverified}>Not Verified</Text>
+          </View>
+        )}
 
-        {/* Get Verified Button */}
-        {!profile?.isVerified && (
+        {/* Expiry info */}
+        {isVerificationActive && profile?.verifiedUntil && (
+          <Text style={styles.expiryText}>
+            Verified until {formatExpiry()}
+          </Text>
+        )}
+
+        {/* Get Verified / Renew Button */}
+        {!isVerificationActive && (
           <TouchableOpacity
-            style={[styles.verifyButton, generating && { opacity: 0.6 }]}
+            style={styles.verifyButton}
             onPress={handleGetVerified}
             activeOpacity={0.8}
-            disabled={generating}
           >
-            {generating ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={styles.verifyButtonText}>Get Verified — KES 499/mo</Text>
-            )}
+            <Text style={styles.verifyButtonText}>Get Verified — KES 499/mo</Text>
+          </TouchableOpacity>
+        )}
+
+        {isVerificationActive && (
+          <TouchableOpacity
+            style={styles.renewButton}
+            onPress={handleGetVerified}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.renewButtonText}>Renew Verification</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -146,6 +164,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     alignItems: "center",
   },
+  avatarContainer: {
+    position: "relative",
+    marginBottom: 16,
+  },
   avatarCircle: {
     width: 80,
     height: 80,
@@ -153,12 +175,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#7c3aed",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
   },
   avatarLetter: {
     fontSize: 32,
     fontWeight: "700",
     color: "#fff",
+  },
+  blueTick: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#3b82f6",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 3,
+    borderColor: "#141420",
+  },
+  blueTickIcon: {
+    fontSize: 14,
+    color: "#fff",
+    fontWeight: "800",
   },
   displayName: {
     fontSize: 22,
@@ -170,9 +209,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#888",
     marginBottom: 20,
-  },
-  badgeRow: {
-    marginBottom: 24,
   },
   verifiedBadge: {
     flexDirection: "row",
@@ -214,6 +250,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#888",
   },
+  expiryText: {
+    color: "#666",
+    fontSize: 12,
+    marginTop: 8,
+    marginBottom: 16,
+  },
   verifyButton: {
     backgroundColor: "#7c3aed",
     borderRadius: 12,
@@ -221,9 +263,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     width: "100%",
     alignItems: "center",
+    marginTop: 20,
   },
   verifyButtonText: {
     color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  renewButton: {
+    backgroundColor: "transparent",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    width: "100%",
+    alignItems: "center",
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "#7c3aed",
+  },
+  renewButtonText: {
+    color: "#7c3aed",
     fontSize: 16,
     fontWeight: "700",
   },
