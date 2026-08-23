@@ -24,5 +24,8 @@ web-build/
 android/
 ios/
 
+# EAS
+eas.json
+
 # Firebase
 .firebase/

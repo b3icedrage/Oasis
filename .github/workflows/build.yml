@@ -16,40 +16,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
       - name: Install dependencies
-        run: |
-          npm ci
-          if [ $? -ne 0 ]; then
-            echo "::error::npm ci failed"
-            exit 1
-          fi
+        run: npm ci
 
-      - name: Verify EAS CLI is available
-        uses: expo/expo-github-action@v8
+      - name: Generate native Android project
+        run: npx expo prebuild --platform android
+        env:
+          CI: 1
+
+      - name: Make Gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Check EAS project linking
-        run: |
-          eas whoami
-          eas project:info
-
-      - name: Build Android APK
-        run: |
-          EAS_SKIP_AUTO_FINGERPRINT=1 eas build --platform android --profile production --non-interactive 2>&1
-          BUILD_EXIT=$?
-          if [ $BUILD_EXIT -ne 0 ]; then
-            echo "::error::EAS build failed with exit code $BUILD_EXIT"
-            exit 1
-          fi
-          echo "✅ Build submitted successfully"
-
-      - name: Print build summary
-        if: success()
-        run: echo "### ✅ APK Build Triggered" >> $GITHUB_STEP_SUMMARY
+          name: glitchit-release
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
