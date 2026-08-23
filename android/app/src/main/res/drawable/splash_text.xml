@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="40dp"
+    android:viewportWidth="200"
+    android:viewportHeight="40">
+    <!-- G letter with glitch effect -->
+    <path
+        android:pathData="M20,8 L40,8 C46,8 50,12 50,18 L50,22 C50,28 46,32 40,32 L30,32 L30,28 L38,28 C40,28 42,26 42,24 L42,16 C42,14 40,12 38,12 L30,12 L30,8 Z"
+        android:fillColor="#00E5FF" />
+    <!-- Glitch text "GlitchIt" -->
+    <path
+        android:pathData="M55,10 L55,30 L60,30 L60,22 L68,30 L74,30 L65,21 L74,10 L68,10 L60,18 L60,10 Z"
+        android:fillColor="#E0E0F0" />
+    <path
+        android:pathData="M78,10 L84,10 C88,10 90,12 90,15 L90,25 C90,28 88,30 84,30 L78,30 Z M82,14 L82,26 L84,26 C85,26 86,25 86,24 L86,16 C86,15 85,14 84,14 Z"
+        android:fillColor="#E0E0F0" />
+    <path
+        android:pathData="M94,18 L94,30 L99,30 L99,18 L104,18 L104,14 L99,14 L99,12 C99,11 100,10 101,10 L104,10 L104,14"
+        android:fillColor="#E0E0F0" />
+    <path
+        android:pathData="M108,14 L114,14 C117,14 119,16 119,19 L119,21 C119,24 117,26 114,26 L108,26 L108,14 Z M112,18 L112,22 L114,22 C114.5,22 115,21.5 115,21 L115,19 C115,18.5 114.5,18 114,18 Z"
+        android:fillColor="#E0E0F0" />
+    <path
+        android:pathData="M123,14 L128,22 L123,30 L128,30 L131,24 L134,30 L139,30 L134,14 L130,14 L127,20 L126,14 Z"
+        android:fillColor="#E0E0F0" />
+    <path
+        android:pathData="M143,10 L148,10 L148,30 L143,30 Z"
+        android:fillColor="#FF00AA" />
+    <path
+        android:pathData="M152,14 L157,14 L157,30 L152,30 Z"
+        android:fillColor="#00E5FF" />
+    <!-- Lightning bolt accent -->
+    <path
+        android:pathData="M165,8 L158,20 L164,20 L156,34 L162,22 L156,22 Z"
+        android:fillColor="#00E5FF" />
+</vector>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Dark background -->
+    <item android:drawable="@color/glitch_bg" />
+
+    <!-- Center logo area -->
+    <item
+        android:gravity="center"
+        android:width="120dp"
+        android:height="120dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#131320" />
+            <corners android:radius="28dp" />
+            <stroke
+                android:width="1dp"
+                android:color="#1E1E30" />
+        </shape>
+    </item>
+
+    <!-- GlitchIt text -->
+    <item
+        android:gravity="center"
+        android:drawable="@drawable/splash_text" />
+</layer-list>

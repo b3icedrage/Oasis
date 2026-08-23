@@ -1,6 +1,19 @@
 @import "tailwindcss";
 
-/* Base reset for full-screen game */
+@theme {
+  --color-glitch-bg: #07070d;
+  --color-glitch-surface: #0e0e18;
+  --color-glitch-card: #131320;
+  --color-glitch-border: #1e1e30;
+  --color-glitch-cyan: #00e5ff;
+  --color-glitch-magenta: #ff00aa;
+  --color-glitch-green: #00ff88;
+  --color-glitch-purple: #a855f7;
+  --color-glitch-text: #e0e0f0;
+  --color-glitch-muted: #6b6b8a;
+  --color-glitch-dim: #3a3a55;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -11,26 +24,105 @@ html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #000;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--color-glitch-bg);
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
+  color: var(--color-glitch-text);
 }
 
-/* Scrollbar styling for inventory panel */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 0;
+  height: 0;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+
+/* Safe area padding for native notch devices */
+.safe-area-top {
+  padding-top: var(--safe-area-top, 0px);
 }
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
+
+.safe-area-bottom {
+  padding-bottom: var(--safe-area-bottom, 0px);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+
+/* Glitch text effect */
+@keyframes glitch-skew {
+  0% { transform: skew(0deg); }
+  20% { transform: skew(-2deg); }
+  40% { transform: skew(1.5deg); }
+  60% { transform: skew(-0.5deg); }
+  80% { transform: skew(0.8deg); }
+  100% { transform: skew(0deg); }
+}
+
+@keyframes glitch-shift {
+  0%, 100% { text-shadow: 2px 0 var(--color-glitch-cyan), -2px 0 var(--color-glitch-magenta); }
+  25% { text-shadow: -2px -1px var(--color-glitch-cyan), 2px 1px var(--color-glitch-magenta); }
+  50% { text-shadow: 1px 2px var(--color-glitch-cyan), -1px -2px var(--color-glitch-magenta); }
+  75% { text-shadow: -1px 1px var(--color-glitch-cyan), 1px -1px var(--color-glitch-magenta); }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.glitch-text {
+  animation: glitch-shift 3s ease-in-out infinite;
+}
+
+.glitch-hover:hover {
+  animation: glitch-skew 0.4s ease-in-out;
+}
+
+.scanline-overlay::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-glitch-cyan), transparent);
+  opacity: 0.08;
+  animation: scanline 4s linear infinite;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Custom scrollbar for feed */
+.feed-scroll::-webkit-scrollbar {
+  width: 0;
+}
+
+/* Neon border glow */
+.neon-border {
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.1), inset 0 0 15px rgba(0, 229, 255, 0.05);
+}
+
+/* Image glitch overlay */
+.glitch-image {
+  position: relative;
+}
+.glitch-image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 229, 255, 0.03) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
 }

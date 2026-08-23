@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- GlitchIt dark theme colors -->
+    <color name="glitch_bg">#07070D</color>
+    <color name="glitch_surface">#0E0E18</color>
+    <color name="glitch_cyan">#00E5FF</color>
+    <color name="glitch_magenta">#FF00AA</color>
+    <color name="glitch_purple">#A855F7</color>
+    <color name="glitch_text">#E0E0F0</color>
+    <color name="glitch_border">#1E1E30</color>
+
+    <!-- Legacy color references -->
+    <color name="colorPrimary">#07070D</color>
+    <color name="colorPrimaryDark">#07070D</color>
+    <color name="colorAccent">#00E5FF</color>
+
+    <!-- Base application theme -->
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/glitch_bg</item>
+        <item name="android:statusBarColor">@color/glitch_bg</item>
+        <item name="android:navigationBarColor">@color/glitch_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="colorPrimary">@color/glitch_cyan</item>
+        <item name="colorPrimaryDark">@color/glitch_bg</item>
+        <item name="colorAccent">@color/glitch_cyan</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:background">@color/glitch_bg</item>
+        <item name="android:statusBarColor">@color/glitch_bg</item>
+        <item name="android:navigationBarColor">@color/glitch_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="android:windowBackground">@drawable/splash</item>
+        <item name="android:statusBarColor">@color/glitch_bg</item>
+        <item name="android:navigationBarColor">@color/glitch_bg</item>
+    </style>
+</resources>

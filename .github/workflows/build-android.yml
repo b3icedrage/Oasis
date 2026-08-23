@@ -1,0 +1,125 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      generate_keystore:
+        description: 'Generate new keystore (run once)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'bun'
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build web assets
+        run: bun run build
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Generate Keystore (if requested)
+        if: ${{ github.event.inputs.generate_keystore == 'true' }}
+        run: |
+          keytool -genkey -v \
+            -keystore glitchit.keystore \
+            -alias glitchit \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+            -keypass ${{ secrets.KEY_PASSWORD }} \
+            -dname "CN=GlitchIt, OU=Development, O=GlitchIt, L=Unknown, ST=Unknown, C=US"
+          echo "KEYSTORE_BASE64=$(base64 -w 0 glitchit.keystore)" >> $GITHUB_ENV
+
+      - name: Decode Keystore
+        if: ${{ github.event.inputs.generate_keystore != 'true' }}
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > glitchit.keystore
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Make Gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Copy Keystore to Android project
+        run: cp glitchit.keystore android/app/
+
+      - name: Build Signed Release APK
+        working-directory: android
+        env:
+          KEYSTORE_PATH: app/glitchit.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: glitchit
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      - name: Build Debug APK (unsigned)
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Zipalign Release APK
+        run: |
+          zipalign -v 4 \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk \
+            GlitchIt-release.apk || \
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk GlitchIt-release.apk
+
+      - name: Upload Signed Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlitchIt-release-signed
+          path: GlitchIt-release.apk
+          retention-days: 30
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlitchIt-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+
+      - name: Print Keystore Info (for first-time setup)
+        if: ${{ github.event.inputs.generate_keystore == 'true' }}
+        run: |
+          echo "============================================"
+          echo "KEYSTORE GENERATED SUCCESSFULLY"
+          echo "============================================"
+          echo ""
+          echo "Save this base64 string as KEYSTORE_BASE64 secret:"
+          echo "${{ env.KEYSTORE_BASE64 }}"
+          echo ""
+          echo "Also save these secrets:"
+          echo "  KEYSTORE_PASSWORD = ${{ secrets.KEYSTORE_PASSWORD }}"
+          echo "  KEY_PASSWORD = ${{ secrets.KEY_PASSWORD }}"
+          echo "  KEY_ALIAS = glitchit"
+          echo "============================================"
