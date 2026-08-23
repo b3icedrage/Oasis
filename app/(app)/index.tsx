@@ -10,13 +10,15 @@ import {
 import { useAuth } from "../../lib/auth-context";
 
 const PAYMENT_URL = "https://store.pesapal.com/monthlyverifications";
+const BRIDGE_URL = "https://glitchit-749c0.web.app/verify";
 
 export default function HomeScreen() {
   const { profile, signOut } = useAuth();
 
   const handleGetVerified = () => {
     if (!profile) return;
-    const url = `${PAYMENT_URL}?key=${profile.verificationKey}`;
+    const callbackUrl = `${BRIDGE_URL}?key=${profile.verificationKey}`;
+    const url = `${PAYMENT_URL}?callback=${encodeURIComponent(callbackUrl)}`;
     Alert.alert(
       "Get Verified",
       "You'll be redirected to Pesapal to complete payment. After payment, your badge will activate automatically.",
