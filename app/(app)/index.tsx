@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Alert,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { useAuth } from "../../lib/auth-context";
 
@@ -13,23 +14,32 @@ const PAYMENT_URL = "https://store.pesapal.com/monthlyverifications";
 const BRIDGE_URL = "https://glitchit-749c0.web.app/verify";
 
 export default function HomeScreen() {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, generateVerificationKey } = useAuth();
+  const [generating, setGenerating] = useState(false);
 
-  const handleGetVerified = () => {
-    if (!profile) return;
-    const callbackUrl = `${BRIDGE_URL}?key=${profile.verificationKey}`;
-    const url = `${PAYMENT_URL}?callback=${encodeURIComponent(callbackUrl)}`;
-    Alert.alert(
-      "Get Verified",
-      "You'll be redirected to Pesapal to complete payment. After payment, your badge will activate automatically.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Proceed",
-          onPress: () => Linking.openURL(url),
-        },
-      ],
-    );
+  const handleGetVerified = async () => {
+    if (!profile || generating) return;
+    setGenerating(true);
+    try {
+      const key = await generateVerificationKey();
+      const callbackUrl = `${BRIDGE_URL}?key=${key}`;
+      const url = `${PAYMENT_URL}?callback=${encodeURIComponent(callbackUrl)}`;
+      Alert.alert(
+        "Get Verified",
+        "You'll be redirected to Pesapal to complete payment. After payment, your badge will activate automatically.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Proceed",
+            onPress: () => Linking.openURL(url),
+          },
+        ],
+      );
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Failed to generate verification key.");
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -79,11 +89,16 @@ export default function HomeScreen() {
         {/* Get Verified Button */}
         {!profile?.isVerified && (
           <TouchableOpacity
-            style={styles.verifyButton}
+            style={[styles.verifyButton, generating && { opacity: 0.6 }]}
             onPress={handleGetVerified}
             activeOpacity={0.8}
+            disabled={generating}
           >
-            <Text style={styles.verifyButtonText}>Get Verified — KES 499/mo</Text>
+            {generating ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text style={styles.verifyButtonText}>Get Verified — KES 499/mo</Text>
+            )}
           </TouchableOpacity>
         )}
       </View>

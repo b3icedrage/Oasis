@@ -23,7 +23,7 @@ export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
-  verificationKey: string;
+  verificationKey: string | null;
   isVerified: boolean;
   createdAt: number;
 }
@@ -40,6 +40,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   activateVerification: (verificationKey: string) => Promise<boolean>;
+  generateVerificationKey: () => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -69,12 +70,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = useCallback(
     async (email: string, password: string, displayName: string) => {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
-      const verificationKey = Crypto.randomUUID();
       const userProfile: UserProfile = {
         uid: cred.user.uid,
         email,
         displayName,
-        verificationKey,
+        verificationKey: null,
         isVerified: false,
         createdAt: Date.now(),
       };
@@ -83,6 +83,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [],
   );
+
+  const generateVerificationKey = useCallback(async (): Promise<string> => {
+    if (!user) throw new Error("Not authenticated");
+    const newKey = Crypto.randomUUID();
+    await updateDoc(doc(db, "users", user.uid), { verificationKey: newKey });
+    setProfile((prev) => (prev ? { ...prev, verificationKey: newKey } : prev));
+    return newKey;
+  }, [user]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {
@@ -119,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signUp, signIn, signOut, activateVerification }}
+      value={{ user, profile, loading, signUp, signIn, signOut, activateVerification, generateVerificationKey }}
     >
       {children}
     </AuthContext.Provider>
