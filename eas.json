@@ -5,17 +5,11 @@
   },
   "build": {
     "preview": {
-      "fingerprint": {
-        "policy": "skip"
-      },
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
-      "fingerprint": {
-        "policy": "skip"
-      },
       "android": {
         "buildType": "apk"
       }
