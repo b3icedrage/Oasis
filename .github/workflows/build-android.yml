@@ -56,14 +56,22 @@ jobs:
             -keyalg RSA \
             -keysize 2048 \
             -validity 10000 \
-            -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
-            -keypass ${{ secrets.KEY_PASSWORD }} \
+            -storepass glitchit2024 \
+            -keypass glitchit2024 \
             -dname "CN=GlitchIt, OU=Development, O=GlitchIt, L=Unknown, ST=Unknown, C=US"
-          echo "KEYSTORE_BASE64=$(base64 -w 0 glitchit.keystore)" >> $GITHUB_ENV
+          echo "KEYSTORE_BASE64=$(base64 -w 0 glitchit.keystore)" >> $GITHUB_OUTPUT
 
       - name: Decode Keystore
-        if: ${{ github.event.inputs.generate_keystore != 'true' && secrets.KEYSTORE_BASE64 != '' }}
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > glitchit.keystore
+        id: keystore
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > glitchit.keystore
+            echo "has_keystore=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_keystore=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
 
       - name: Sync Capacitor
         run: npx cap sync android
@@ -72,11 +80,11 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Copy Keystore
-        if: ${{ hashFiles('glitchit.keystore') != '' }}
+        if: steps.keystore.outputs.has_keystore == 'true'
         run: cp glitchit.keystore android/app/
 
       - name: Build Signed Release APK
-        if: ${{ hashFiles('android/app/glitchit.keystore') != '' }}
+        if: steps.keystore.outputs.has_keystore == 'true'
         working-directory: android
         env:
           KEYSTORE_PATH: app/glitchit.keystore
@@ -90,7 +98,7 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Upload Release APK
-        if: ${{ hashFiles('android/app/build/outputs/apk/release/app-release-unsigned.apk') != '' }}
+        if: steps.keystore.outputs.has_keystore == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: GlitchIt-release
@@ -103,15 +111,3 @@ jobs:
           name: GlitchIt-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
-
-      - name: Print Keystore Info
-        if: ${{ github.event.inputs.generate_keystore == 'true' }}
-        run: |
-          echo "=========================================="
-          echo "KEYSTORE GENERATED - Save these secrets:"
-          echo "=========================================="
-          echo "KEYSTORE_BASE64 = ${{ env.KEYSTORE_BASE64 }}"
-          echo "KEYSTORE_PASSWORD = ${{ secrets.KEYSTORE_PASSWORD }}"
-          echo "KEY_PASSWORD = ${{ secrets.KEY_PASSWORD }}"
-          echo "KEY_ALIAS = glitchit"
-          echo "=========================================="

@@ -15,29 +15,32 @@ android {
         }
     }
 
-    signingConfigs {
+    buildTypes {
         release {
-            def keystorePath = System.getenv('KEYSTORE_PATH')
-            if (keystorePath != null) {
-                def keystoreFile = file(keystorePath)
-                if (keystoreFile.exists()) {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// Apply signing config only if keystore exists
+def keystorePath = System.getenv('KEYSTORE_PATH')
+if (keystorePath != null) {
+    def keystoreFile = file(keystorePath)
+    if (keystoreFile.exists()) {
+        android {
+            signingConfigs {
+                release {
                     storeFile keystoreFile
                     storePassword System.getenv('KEYSTORE_PASSWORD')
                     keyAlias System.getenv('KEY_ALIAS') ?: 'glitchit'
                     keyPassword System.getenv('KEY_PASSWORD')
                 }
             }
-        }
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            try {
-                signingConfig signingConfigs.release
-            } catch (Exception e) {
-                // No signing config available, build unsigned
+            buildTypes {
+                release {
+                    signingConfig signingConfigs.release
+                }
             }
         }
     }
