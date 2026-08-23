@@ -10,7 +10,7 @@ function App() {
   return (
     <BrowserRouter>
       <div className="h-screen w-screen bg-glitch-bg overflow-hidden scanline-overlay flex items-center justify-center">
-        <div className="w-full max-w-[430px] h-full bg-glitch-bg relative overflow-hidden border-x border-glitch-border/30">
+        <div className="w-full h-full bg-glitch-bg relative overflow-hidden md:max-w-[430px] md:border-x md:border-glitch-border/30">
         <main className="h-full pb-14">
           <Routes>
             <Route path="/" element={<Home />} />

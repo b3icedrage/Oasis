@@ -16,7 +16,7 @@ export function Profile() {
   return (
     <div className="h-full flex flex-col bg-glitch-bg">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-glitch-bg/95 backdrop-blur-xl border-b border-glitch-border px-4 py-2.5 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-glitch-bg/95 backdrop-blur-xl border-b border-glitch-border px-4 py-2.5 flex items-center justify-between safe-area-top">
         <div className="flex items-center gap-1">
           <span className="text-white font-semibold text-base">{currentUser.username}</span>
           <span className="text-glitch-dim">▼</span>

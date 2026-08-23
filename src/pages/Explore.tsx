@@ -13,7 +13,7 @@ export function Explore() {
   return (
     <div className="h-full flex flex-col bg-glitch-bg">
       {/* Search */}
-      <div className="sticky top-0 z-40 bg-glitch-bg/95 backdrop-blur-xl px-3 pt-3 pb-2 space-y-2.5">
+      <div className="sticky top-0 z-40 bg-glitch-bg/95 backdrop-blur-xl px-3 pt-3 pb-2 space-y-2.5 safe-area-top">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-glitch-muted" />
           <input

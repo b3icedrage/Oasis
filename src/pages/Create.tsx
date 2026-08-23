@@ -19,7 +19,7 @@ export function Create() {
   return (
     <div className="h-full flex flex-col bg-glitch-bg">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-glitch-bg/95 backdrop-blur-xl border-b border-glitch-border px-4 py-2.5 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-glitch-bg/95 backdrop-blur-xl border-b border-glitch-border px-4 py-2.5 flex items-center justify-between safe-area-top">
         <span className="text-white font-semibold">New Post</span>
         <button className="text-glitch-cyan text-sm font-semibold">Share</button>
       </header>

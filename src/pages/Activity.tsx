@@ -6,7 +6,7 @@ export function Activity() {
   return (
     <div className="h-full flex flex-col bg-glitch-bg">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-glitch-bg/95 backdrop-blur-xl border-b border-glitch-border px-4 py-2.5">
+      <header className="sticky top-0 z-40 bg-glitch-bg/95 backdrop-blur-xl border-b border-glitch-border px-4 py-2.5 safe-area-top">
         <h1 className="text-white font-semibold text-base">Activity</h1>
       </header>
 
