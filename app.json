@@ -22,7 +22,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#07070d"
       },
-      "package": "com.glitchit.app"
+      "package": "com.glitchit.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -48,6 +52,13 @@
           "icon": "./assets/notification-icon.png"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "390023bf-137a-43a2-a374-a32c46e260ab"
+      }
+    },
+    "owner": "b3icedrage"
   }
 }
