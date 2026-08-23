@@ -3,6 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,11 +21,35 @@ jobs:
           node-version: 20
           cache: npm
 
-      - run: npm ci
+      - name: Install dependencies
+        run: |
+          npm ci
+          if [ $? -ne 0 ]; then
+            echo "::error::npm ci failed"
+            exit 1
+          fi
 
-      - uses: expo/expo-github-action@v8
+      - name: Verify EAS CLI is available
+        uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - run: eas build --platform android --profile production --non-interactive
+      - name: Check EAS project linking
+        run: |
+          eas whoami
+          eas project:info
+
+      - name: Build Android APK
+        run: |
+          eas build --platform android --profile production --non-interactive 2>&1
+          BUILD_EXIT=$?
+          if [ $BUILD_EXIT -ne 0 ]; then
+            echo "::error::EAS build failed with exit code $BUILD_EXIT"
+            exit 1
+          fi
+          echo "✅ Build submitted successfully"
+
+      - name: Print build summary
+        if: success()
+        run: echo "### ✅ APK Build Triggered" >> $GITHUB_STEP_SUMMARY
