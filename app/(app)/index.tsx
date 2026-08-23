@@ -5,31 +5,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Linking,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { useAuth } from "../../lib/auth-context";
-
-const PAYMENT_URL = "https://store.pesapal.com/monthlyverifications";
-const BRIDGE_URL = "https://glitchit-749c0.web.app/verify";
 
 export default function HomeScreen() {
   const { profile, signOut, isVerificationActive } = useAuth();
-
-  const handleGetVerified = () => {
-    if (!profile) return;
-    const url = `${PAYMENT_URL}?callback=${encodeURIComponent(BRIDGE_URL)}`;
-    Alert.alert(
-      "Get Verified",
-      "You'll be redirected to Pesapal to complete payment. After payment, your blue tick badge will activate for 1 month.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Proceed",
-          onPress: () => Linking.openURL(url),
-        },
-      ],
-    );
-  };
+  const router = useRouter();
 
   const handleSignOut = async () => {
     try {
@@ -37,17 +19,6 @@ export default function HomeScreen() {
     } catch (e: any) {
       Alert.alert("Error", e.message);
     }
-  };
-
-  // Format expiry date
-  const formatExpiry = () => {
-    if (!profile?.verifiedUntil) return null;
-    const date = new Date(profile.verifiedUntil);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
   };
 
   return (
@@ -91,34 +62,18 @@ export default function HomeScreen() {
             <Text style={styles.badgeTextUnverified}>Not Verified</Text>
           </View>
         )}
+      </View>
 
-        {/* Expiry info */}
-        {isVerificationActive && profile?.verifiedUntil && (
-          <Text style={styles.expiryText}>
-            Verified until {formatExpiry()}
-          </Text>
-        )}
-
-        {/* Get Verified / Renew Button */}
-        {!isVerificationActive && (
-          <TouchableOpacity
-            style={styles.verifyButton}
-            onPress={handleGetVerified}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.verifyButtonText}>Get Verified — KES 499/mo</Text>
-          </TouchableOpacity>
-        )}
-
-        {isVerificationActive && (
-          <TouchableOpacity
-            style={styles.renewButton}
-            onPress={handleGetVerified}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.renewButtonText}>Renew Verification</Text>
-          </TouchableOpacity>
-        )}
+      {/* Menu */}
+      <View style={styles.menu}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => router.push("/(app)/settings")}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.menuItemText}>Settings</Text>
+          <Text style={styles.menuArrow}>›</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Sign Out */}
@@ -250,41 +205,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#888",
   },
-  expiryText: {
-    color: "#666",
-    fontSize: 12,
-    marginTop: 8,
-    marginBottom: 16,
+  menu: {
+    marginTop: 24,
   },
-  verifyButton: {
-    backgroundColor: "#7c3aed",
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    width: "100%",
+  menuItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 20,
-  },
-  verifyButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  renewButton: {
-    backgroundColor: "transparent",
+    backgroundColor: "#141420",
     borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    width: "100%",
-    alignItems: "center",
-    marginTop: 20,
     borderWidth: 1,
-    borderColor: "#7c3aed",
+    borderColor: "#2a2a3a",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
-  renewButtonText: {
-    color: "#7c3aed",
+  menuItemText: {
+    color: "#e0e0e0",
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "600",
+  },
+  menuArrow: {
+    color: "#555",
+    fontSize: 22,
+    fontWeight: "300",
   },
   signOutButton: {
     marginTop: "auto",
