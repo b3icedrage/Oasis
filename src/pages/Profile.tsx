@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Grid3X3, Bookmark, Film, Settings, Link2 } from 'lucide-react';
 import { currentUser, feedPosts, suggestedUsers } from '../data/mockData';
 import { Avatar } from '../components/Avatar';
+import { hapticImpact } from '../hooks/useHaptics';
+import { ImpactStyle } from '@capacitor/haptics';
 
 export function Profile() {
   const [activeTab, setActiveTab] = useState<'posts' | 'saved' | 'reels'>('posts');
@@ -100,11 +102,13 @@ export function Profile() {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-glitch-border">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+        <div className="flex border-b border-glitch-border">            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  hapticImpact(ImpactStyle.Light);
+                }}
               className={`flex-1 flex items-center justify-center py-2.5 relative ${
                 activeTab === tab.id ? 'text-white' : 'text-glitch-dim'
               }`}

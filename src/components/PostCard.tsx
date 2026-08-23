@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from 'lucide-react';
 import { Avatar } from './Avatar';
+import { hapticImpact, hapticNotification } from '../hooks/useHaptics';
+import { ImpactStyle, NotificationType } from '@capacitor/haptics';
 import type { Post } from '../data/mockData';
 
 interface PostCardProps {
@@ -18,6 +20,7 @@ export function PostCard({ post }: PostCardProps) {
     if (!liked) {
       setLiked(true);
       setLikeCount((c) => c + 1);
+      hapticImpact(ImpactStyle.Heavy);
     }
     setShowHeart(true);
     setTimeout(() => setShowHeart(false), 800);
@@ -26,6 +29,12 @@ export function PostCard({ post }: PostCardProps) {
   const handleLike = () => {
     setLiked(!liked);
     setLikeCount((c) => (liked ? c - 1 : c + 1));
+    hapticNotification(liked ? NotificationType.Warning : NotificationType.Success);
+  };
+
+  const handleSave = () => {
+    setSaved(!saved);
+    hapticImpact(ImpactStyle.Medium);
   };
 
   return (
@@ -101,9 +110,8 @@ export function PostCard({ post }: PostCardProps) {
           <motion.button whileTap={{ scale: 0.8 }}>
             <Send className="w-6 h-6 text-white" />
           </motion.button>
-        </div>
-        <motion.button
-          onClick={() => setSaved(!saved)}
+        </div>          <motion.button
+          onClick={handleSave}
           whileTap={{ scale: 0.8 }}
         >
           <Bookmark

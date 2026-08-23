@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Image, Zap, Type, X, ChevronDown } from 'lucide-react';
+import { Camera, Image, Type, X, ChevronDown, Aperture } from 'lucide-react';
+import { capturePhoto, captureFromGallery } from '../hooks/useCamera';
+import { hapticImpact, hapticNotification } from '../hooks/useHaptics';
+import { ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { scheduleLocalNotification } from '../hooks/useNotifications';
 
 const filters = [
   { name: 'None', class: '' },
@@ -14,33 +18,89 @@ const filters = [
 export function Create() {
   const [selectedFilter, setSelectedFilter] = useState('None');
   const [caption, setCaption] = useState('');
-  const [showPreview, setShowPreview] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const handleCamera = async () => {
+    hapticImpact(ImpactStyle.Light);
+    const photo = await capturePhoto();
+    if (photo) {
+      setPreviewImage(photo.webPath);
+      hapticNotification(NotificationType.Success);
+    }
+  };
+
+  const handleGallery = async () => {
+    hapticImpact(ImpactStyle.Light);
+    const photo = await captureFromGallery();
+    if (photo) {
+      setPreviewImage(photo.webPath);
+      hapticNotification(NotificationType.Success);
+    }
+  };
+
+  const handleShare = async () => {
+    hapticNotification(NotificationType.Success);
+    await scheduleLocalNotification({
+      title: 'GlitchIt',
+      body: 'Your post has been shared! 🎉',
+    });
+    setPreviewImage(null);
+    setCaption('');
+    setSelectedFilter('None');
+  };
+
+  const handleDiscard = () => {
+    hapticImpact(ImpactStyle.Medium);
+    setPreviewImage(null);
+    setCaption('');
+    setSelectedFilter('None');
+  };
 
   return (
     <div className="h-full flex flex-col bg-glitch-bg">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-glitch-bg/95 backdrop-blur-xl border-b border-glitch-border px-4 py-2.5 flex items-center justify-between safe-area-top">
-        <span className="text-white font-semibold">New Post</span>
-        <button className="text-glitch-cyan text-sm font-semibold">Share</button>
+        {previewImage ? (
+          <motion.button
+            onClick={handleDiscard}
+            whileTap={{ scale: 0.9 }}
+            className="text-white"
+          >
+            <X className="w-6 h-6" />
+          </motion.button>
+        ) : (
+          <span className="text-white font-semibold">New Post</span>
+        )}
+        {previewImage ? (
+          <motion.button
+            onClick={handleShare}
+            whileTap={{ scale: 0.95 }}
+            className="text-glitch-cyan text-sm font-semibold"
+          >
+            Share
+          </motion.button>
+        ) : (
+          <span />
+        )}
       </header>
 
-      {/* Upload Area */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto">
         <AnimatePresence mode="wait">
-          {!showPreview ? (
+          {!previewImage ? (
             <motion.div
               key="upload"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               className="flex flex-col items-center justify-center h-[50vh] gap-6"
             >
               <motion.div
-                className="w-24 h-24 rounded-3xl bg-gradient-to-br from-glitch-cyan/20 to-glitch-purple/20 border border-glitch-border flex items-center justify-center"
+                className="w-28 h-28 rounded-3xl bg-gradient-to-br from-glitch-cyan/20 to-glitch-purple/20 border border-glitch-border flex items-center justify-center"
                 animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <Camera className="w-10 h-10 text-glitch-cyan" />
+                <Aperture className="w-12 h-12 text-glitch-cyan" />
               </motion.div>
               <div className="text-center space-y-2">
                 <p className="text-white font-semibold text-lg">Create a new post</p>
@@ -49,43 +109,39 @@ export function Create() {
               <div className="flex gap-3">
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowPreview(true)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-glitch-cyan to-glitch-purple text-white text-sm font-semibold"
+                  onClick={handleCamera}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-glitch-cyan to-glitch-purple text-white text-sm font-semibold shadow-lg shadow-glitch-cyan/20"
                 >
-                  <Image className="w-4 h-4" />
-                  Gallery
+                  <Camera className="w-4 h-4" />
+                  Camera
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-glitch-surface border border-glitch-border text-white text-sm font-semibold"
+                  onClick={handleGallery}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-glitch-surface border border-glitch-border text-white text-sm font-semibold"
                 >
-                  <Zap className="w-4 h-4" />
-                  AI Generate
+                  <Image className="w-4 h-4" />
+                  Gallery
                 </motion.button>
               </div>
             </motion.div>
           ) : (
             <motion.div
               key="preview"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             >
               {/* Image Preview */}
               <div className="relative aspect-square bg-glitch-surface">
                 <img
-                  src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80"
+                  src={previewImage}
                   alt="Preview"
                   className={`w-full h-full object-cover ${
                     filters.find((f) => f.name === selectedFilter)?.class || ''
                   }`}
                 />
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="absolute top-3 left-3 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center"
-                >
-                  <X className="w-4 h-4 text-white" />
-                </button>
               </div>
 
               {/* Filters */}
@@ -96,9 +152,13 @@ export function Create() {
                 </div>
                 <div className="flex gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
                   {filters.map((filter) => (
-                    <button
+                    <motion.button
                       key={filter.name}
-                      onClick={() => setSelectedFilter(filter.name)}
+                      onClick={() => {
+                        setSelectedFilter(filter.name);
+                        hapticImpact(ImpactStyle.Light);
+                      }}
+                      whileTap={{ scale: 0.95 }}
                       className="flex flex-col items-center gap-1.5 flex-shrink-0"
                     >
                       <div
@@ -109,7 +169,7 @@ export function Create() {
                         }`}
                       >
                         <img
-                          src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&q=60"
+                          src={previewImage}
                           alt={filter.name}
                           className={`w-full h-full object-cover ${filter.class}`}
                         />
@@ -121,7 +181,7 @@ export function Create() {
                       >
                         {filter.name}
                       </span>
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
@@ -153,6 +213,7 @@ export function Create() {
                 {['Tag people', 'Add location', 'Add music'].map((option) => (
                   <button
                     key={option}
+                    onClick={() => hapticImpact(ImpactStyle.Light)}
                     className="w-full flex items-center justify-between py-3 border-b border-glitch-border last:border-0"
                   >
                     <span className="text-sm text-white">{option}</span>

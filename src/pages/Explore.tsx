@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, X, Play } from 'lucide-react';
 import { exploreGrid } from '../data/mockData';
+import { hapticImpact } from '../hooks/useHaptics';
+import { ImpactStyle } from '@capacitor/haptics';
 
 const categories = ['For You', 'Glitch Art', 'Cyberpunk', 'Neon', 'Digital', 'Retro'];
 
@@ -39,7 +41,10 @@ export function Explore() {
           {categories.map((cat) => (
             <button
               key={cat}
-              onClick={() => setActiveCategory(cat)}
+              onClick={() => {
+                setActiveCategory(cat);
+                hapticImpact(ImpactStyle.Light);
+              }}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                 activeCategory === cat
                   ? 'bg-glitch-cyan/15 text-glitch-cyan border border-glitch-cyan/30'

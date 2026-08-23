@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { Avatar } from './Avatar';
 import { stories } from '../data/mockData';
+import { hapticImpact } from '../hooks/useHaptics';
+import { ImpactStyle } from '@capacitor/haptics';
 
 export function StoryBar() {
   return (
@@ -9,6 +11,7 @@ export function StoryBar() {
         {stories.map((story, i) => (
           <motion.button
             key={story.id}
+            onClick={() => hapticImpact(ImpactStyle.Light)}
             className="flex flex-col items-center gap-1 flex-shrink-0"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}

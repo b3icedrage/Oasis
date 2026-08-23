@@ -7,6 +7,8 @@ import {
   Heart,
   User,
 } from 'lucide-react';
+import { hapticImpact } from '../hooks/useHaptics';
+import { ImpactStyle } from '@capacitor/haptics';
 
 const navItems = [
   { path: '/', icon: Home },
@@ -30,7 +32,10 @@ export function BottomNav() {
           return (
             <motion.button
               key={path}
-              onClick={() => navigate(path)}
+              onClick={() => {
+                hapticImpact(ImpactStyle.Light);
+                navigate(path);
+              }}
               className="relative flex flex-col items-center justify-center w-14 h-full"
               whileTap={{ scale: 0.85 }}
             >
