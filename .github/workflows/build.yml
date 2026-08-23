@@ -42,7 +42,7 @@ jobs:
 
       - name: Build Android APK
         run: |
-          eas build --platform android --profile production --non-interactive --no-fingerprint 2>&1
+          eas build --platform android --profile production --non-interactive 2>&1
           BUILD_EXIT=$?
           if [ $BUILD_EXIT -ne 0 ]; then
             echo "::error::EAS build failed with exit code $BUILD_EXIT"
