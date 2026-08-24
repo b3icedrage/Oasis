@@ -1,11 +1,13 @@
 #!/bin/bash
-# Local Android build using EAS
+# Local build using EAS (all platforms, skip fingerprint)
 # Run: sh ./scripts/build-android.sh
 set -e
 
-echo "🔧 Starting local Android build..."
+export EAS_SKIP_AUTO_FINGERPRINT=1
+
+echo "🔧 Starting local build (all platforms)..."
 echo "   Profile: preview"
-echo "   Platform: android"
+echo "   Skipping auto-fingerprint"
 echo ""
 
 # Check for eas-cli
@@ -23,12 +25,11 @@ fi
 echo "✅ Authenticated as: $(eas whoami)"
 echo ""
 
-# Run the local build
+# Run the local build for all platforms
 eas build \
   --profile preview \
-  --platform android \
-  --local \
+  --platform all \
   --non-interactive
 
 echo ""
-echo "✅ Build complete! APK will be saved to the current directory."
+echo "✅ Build complete!"
