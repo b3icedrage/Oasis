@@ -9,17 +9,231 @@ import {
   Alert,
   Image,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Haptics from "expo-haptics";
 import { Colors } from "../../data/theme";
+import { uploadVideo, uploadImage, UploadProgress } from "../../lib/r2";
+import {
+  HomeIcon,
+  SearchIcon,
+  BoltIcon,
+  BellIcon,
+  UserIcon,
+  PlusIcon,
+  ChevronDown,
+  HeartIcon,
+  SearchIcon as SearchSvg,
+  BoltIcon as BoltSvg,
+  BellIcon as BellSvg,
+  UserIcon as UserSvg,
+} from "../../components/Icons";
+import Svg, { Path, Circle, Rect, Line } from "react-native-svg";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type CreateMode = "POST" | "STORY" | "LIVE";
 type FlashMode = "off" | "on" | "auto";
+
+// ─── Inline SVG Icons (replacing @expo/vector-icons) ─────────────
+function CameraOutlineSvg({ size = 24, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx="12" cy="13" r="4" stroke={color} strokeWidth="2" />
+    </Svg>
+  );
+}
+
+function CloseSvg({ size = 28, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Line x1="18" y1="6" x2="6" y2="18" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <Line x1="6" y1="6" x2="18" y2="18" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+function FlashOffSvg({ size = 20, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <Line x1="2" y1="2" x2="22" y2="22" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+function FlashOnSvg({ size = 20, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+function MoonSvg({ size = 20, color = '#fff', filled = false }: { size?: number; color?: string; filled?: boolean }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'}>
+      <Path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+function FlipCameraSvg({ size = 22, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M20 7l-4-4v3H8a4 4 0 000 8h1" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M4 17l4 4v-3h8a4 4 0 000-8h-1" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+function SparklesSvg({ size = 20, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+function TextSvg({ size = 22, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M4 7V4h16v3M9 20h6M12 4v16" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+function BrushSvg({ size = 22, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+function StickerSvg({ size = 22, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" />
+      <Path d="M8 14s1.5 2 4 2 4-2 4-2" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <Line x1="9" y1="9" x2="9.01" y2="9" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <Line x1="15" y1="9" x2="15.01" y2="9" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+function GallerySvg({ size = 20, color = '#6b6b8a' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x="3" y="3" width="18" height="18" rx="2" stroke={color} strokeWidth="2" />
+      <Circle cx="8.5" cy="8.5" r="1.5" fill={color} />
+      <Path d="M21 15l-5-5L5 21" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+// ─── Recording Indicator ──────────────────────────────────────────
+function RecordingIndicator({ seconds }: { seconds: number }) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return (
+    <View style={recStyles.container}>
+      <View style={recStyles.dot} />
+      <Text style={recStyles.text}>
+        {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
+      </Text>
+    </View>
+  );
+}
+
+const recStyles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(220,38,38,0.85)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#fff",
+  },
+  text: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+  },
+});
+
+// ─── Upload Progress Overlay ──────────────────────────────────────
+function UploadOverlay({ progress }: { progress: UploadProgress }) {
+  return (
+    <View style={uploadStyles.container}>
+      <View style={uploadStyles.card}>
+        <ActivityIndicator size="large" color={Colors.cyan} />
+        <Text style={uploadStyles.title}>Uploading...</Text>
+        <View style={uploadStyles.barBg}>
+          <View style={[uploadStyles.barFill, { width: `${progress.percent}%` }]} />
+        </View>
+        <Text style={uploadStyles.percent}>{progress.percent}%</Text>
+      </View>
+    </View>
+  );
+}
+
+const uploadStyles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(7,7,13,0.85)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 100,
+  },
+  card: {
+    alignItems: "center",
+    gap: 14,
+    backgroundColor: Colors.card,
+    borderRadius: 20,
+    padding: 32,
+    width: 220,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  title: {
+    color: Colors.text,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  barBg: {
+    width: "100%",
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.dim,
+    overflow: "hidden",
+  },
+  barFill: {
+    height: "100%",
+    borderRadius: 2,
+    backgroundColor: Colors.cyan,
+  },
+  percent: {
+    color: Colors.muted,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+});
 
 const GLITCH_FILTERS = [
   { id: "none", label: "None" },
@@ -38,14 +252,14 @@ function PermissionScreen({ onGrant }: { onGrant: () => void }) {
     <View style={permStyles.container}>
       <View style={permStyles.card}>
         <View style={permStyles.iconCircle}>
-          <Ionicons name="camera-outline" size={56} color={Colors.cyan} />
+          <CameraOutlineSvg size={56} color={Colors.cyan} />
         </View>
         <Text style={permStyles.title}>Camera Access Required</Text>
         <Text style={permStyles.subtitle}>
           GlitchIt needs access to your camera to capture glitch art and share it with the world.
         </Text>
         <TouchableOpacity style={permStyles.grantBtn} onPress={onGrant} activeOpacity={0.8}>
-          <Ionicons name="camera" size={18} color={Colors.white} />
+          <CameraOutlineSvg size={18} color={Colors.white} />
           <Text style={permStyles.grantBtnText}>Enable Camera</Text>
         </TouchableOpacity>
         <Text style={permStyles.hint}>
@@ -58,30 +272,20 @@ function PermissionScreen({ onGrant }: { onGrant: () => void }) {
 
 // ─── Camera Tool Button ───────────────────────────────────────────
 function CameraTool({
-  icon,
+  iconSvg,
   label,
   active,
   onPress,
-  iconFamily = "ionicons",
 }: {
-  icon: string;
+  iconSvg: React.ReactNode;
   label: string;
   active?: boolean;
   onPress: () => void;
-  iconFamily?: "ionicons" | "material";
 }) {
   return (
     <TouchableOpacity style={toolStyles.container} onPress={onPress} activeOpacity={0.7}>
       <View style={[toolStyles.iconWrap, active && toolStyles.iconWrapActive]}>
-        {iconFamily === "material" ? (
-          <MaterialCommunityIcons
-            name={icon as any}
-            size={22}
-            color={active ? Colors.white : Colors.muted}
-          />
-        ) : (
-          <Ionicons name={icon as any} size={22} color={active ? Colors.white : Colors.muted} />
-        )}
+        {iconSvg}
       </View>
       <Text style={[toolStyles.label, active && toolStyles.labelActive]}>{label}</Text>
     </TouchableOpacity>
@@ -104,6 +308,13 @@ export default function CreateScreen() {
   const [selectedFilter, setSelectedFilter] = useState("glitch-art");
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [captureMode, setCaptureMode] = useState<"photo" | "video">("photo");
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({ loaded: 0, total: 0, percent: 0 });
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recordingRef = useRef<any>(null);
 
   const toggleFlash = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -123,6 +334,40 @@ export default function CreateScreen() {
   const handleCapture = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     if (!cameraRef.current) return;
+
+    // Video recording toggle
+    if (captureMode === "video") {
+      if (isRecording) {
+        // Stop recording
+        if (recordTimerRef.current) clearInterval(recordTimerRef.current);
+        try {
+          const video = await recordingRef.current?.stopAsync();
+          if (video?.uri) {
+            setCapturedUri(video.uri);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+        } catch {}
+        setIsRecording(false);
+        setRecordSeconds(0);
+        recordingRef.current = null;
+        return;
+      }
+      // Start recording
+      setIsRecording(true);
+      setRecordSeconds(0);
+      recordTimerRef.current = setInterval(() => {
+        setRecordSeconds((s) => s + 1);
+      }, 1000);
+      try {
+        recordingRef.current = cameraRef.current.recordAsync({ maxDuration: 60 });
+      } catch {
+        setIsRecording(false);
+        if (recordTimerRef.current) clearInterval(recordTimerRef.current);
+      }
+      return;
+    }
+
+    // Photo capture
     try {
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.9,
@@ -135,7 +380,7 @@ export default function CreateScreen() {
     } catch {
       // Camera capture failed — still usable for demo
     }
-  }, []);
+  }, [captureMode, isRecording]);
 
   const handlePermissionGrant = useCallback(async () => {
     const result = await requestPermission();
@@ -176,14 +421,28 @@ export default function CreateScreen() {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             }}
           >
-            <Ionicons name="close" size={28} color={Colors.white} />
+            <CloseSvg size={28} color={Colors.white} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.shareBtn}
-            onPress={() => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              Alert.alert("Shared!", "Your glitch art has been posted!");
-              setCapturedUri(null);
+            style={[styles.shareBtn, uploading && styles.shareBtnDisabled]}
+            disabled={uploading}
+            onPress={async () => {
+              if (uploading) return;
+              setUploading(true);
+              setUploadProgress({ loaded: 0, total: 0, percent: 0 });
+              try {
+                const isVideo = capturedUri?.includes(".mp4") || capturedUri?.includes("video");
+                const uploadFn = isVideo ? uploadVideo : uploadImage;
+                const result = await uploadFn(capturedUri!, (p) => setUploadProgress(p));
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                Alert.alert("Shared!", "Your glitch art has been uploaded!", [
+                  { text: "OK", onPress: () => setCapturedUri(null) },
+                ]);
+              } catch (err: any) {
+                Alert.alert("Upload Failed", err?.message || "Something went wrong. Try again.");
+              } finally {
+                setUploading(false);
+              }
             }}
           >
             <Text style={styles.shareBtnText}>Share</Text>
@@ -222,18 +481,21 @@ export default function CreateScreen() {
         {/* Bottom tool strip */}
         <View style={styles.capturedBottomTools}>
           <TouchableOpacity style={styles.capturedToolBtn}>
-            <Ionicons name="text" size={22} color={Colors.white} />
+            <TextSvg size={22} color={Colors.white} />
             <Text style={styles.capturedToolLabel}>Text</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.capturedToolBtn}>
-            <Ionicons name="brush" size={22} color={Colors.white} />
+            <BrushSvg size={22} color={Colors.white} />
             <Text style={styles.capturedToolLabel}>Draw</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.capturedToolBtn}>
-            <Ionicons name="happy-outline" size={22} color={Colors.white} />
+            <StickerSvg size={22} color={Colors.white} />
             <Text style={styles.capturedToolLabel}>Stickers</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Upload progress overlay */}
+        {uploading && <UploadOverlay progress={uploadProgress} />}
       </View>
     );
   }
@@ -265,27 +527,23 @@ export default function CreateScreen() {
               <Text style={styles.headerAvatarText}>G</Text>
             </View>
             <Text style={styles.headerUsername}>@CosmicGlitcher</Text>
-            <Ionicons name="chevron-down" size={14} color={Colors.white} />
+            <ChevronDown size={14} color={Colors.white} />
           </View>
 
           {/* Right: Camera tools */}
           <View style={styles.headerRight}>
             <TouchableOpacity style={styles.headerIconBtn} onPress={toggleFlash}>
-              <              Ionicons
-                name={flash === "off" ? "flash-off" : "flash"}
-                size={20}
-                color={flash !== "off" ? Colors.cyan : Colors.white}
-              />
+              {flash !== "off" ? (
+                <FlashOnSvg size={20} color={Colors.cyan} />
+              ) : (
+                <FlashOffSvg size={20} color={Colors.white} />
+              )}
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerIconBtn} onPress={toggleNight}>
-              <Ionicons
-                name={nightMode ? "moon" : "moon-outline"}
-                size={20}
-                color={nightMode ? Colors.cyan : Colors.white}
-              />
+              <MoonSvg size={20} color={nightMode ? Colors.cyan : Colors.white} filled={nightMode} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerIconBtn} onPress={toggleCamera}>
-              <Ionicons name="camera-reverse-outline" size={22} color={Colors.white} />
+              <FlipCameraSvg size={22} color={Colors.white} />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.headerIconBtn, styles.effectsIconActive]}
@@ -294,7 +552,7 @@ export default function CreateScreen() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }}
             >
-              <Ionicons name="sparkles" size={20} color={Colors.white} />
+              <SparklesSvg size={20} color={Colors.white} />
             </TouchableOpacity>
           </View>
         </View>
@@ -355,24 +613,24 @@ export default function CreateScreen() {
         {/* Camera tools row */}
         <View style={styles.toolsRow}>
           <CameraTool
-            icon={flash === "off" ? "flash-off" : "flash"}
+            iconSvg={flash !== "off" ? <FlashOnSvg size={22} color={Colors.cyan} /> : <FlashOffSvg size={22} color={Colors.muted} />}
             label={`Flash (${flash === "off" ? "Off" : "On"})`}
             active={flash !== "off"}
             onPress={toggleFlash}
           />
           <CameraTool
-            icon="moon-outline"
+            iconSvg={<MoonSvg size={22} color={nightMode ? Colors.white : Colors.muted} filled={nightMode} />}
             label="Night Mode"
             active={nightMode}
             onPress={toggleNight}
           />
           <CameraTool
-            icon="camera-reverse-outline"
+            iconSvg={<FlipCameraSvg size={22} color={Colors.muted} />}
             label="Camera"
             onPress={toggleCamera}
           />
           <CameraTool
-            icon="sparkles"
+            iconSvg={<SparklesSvg size={22} color={filterDrawerOpen ? Colors.white : Colors.muted} />}
             label="Filters"
             active={filterDrawerOpen}
             onPress={() => {
@@ -389,21 +647,52 @@ export default function CreateScreen() {
           </Text>
         </View>
 
+        {/* Photo / Video mode toggle */}
+        <View style={styles.captureModeRow}>
+          <TouchableOpacity
+            onPress={() => setCaptureMode("photo")}
+            style={[styles.captureModeBtn, captureMode === "photo" && styles.captureModeBtnActive]}
+          >
+            <Text style={[styles.captureModeText, captureMode === "photo" && styles.captureModeTextActive]}>PHOTO</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setCaptureMode("video")}
+            style={[styles.captureModeBtn, captureMode === "video" && styles.captureModeBtnActive]}
+          >
+            <Text style={[styles.captureModeText, captureMode === "video" && styles.captureModeTextActive]}>VIDEO</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Shutter + bottom tools */}
         <View style={styles.shutterRow}>
           {/* Gallery thumbnail */}
           <TouchableOpacity style={styles.galleryThumb}>
             <View style={styles.galleryThumbInner}>
-              <Ionicons name="images-outline" size={20} color={Colors.muted} />
+              <GallerySvg size={20} color={Colors.muted} />
             </View>
           </TouchableOpacity>
 
-          {/* Center tools */}
+          {/* Center - Shutter / Record button */}
           <View style={styles.bottomToolsCenter}>
-            <TouchableOpacity style={styles.shutterBtn} onPress={handleCapture} activeOpacity={0.7}>
-              <View style={styles.shutterOuter}>
-                <View style={styles.shutterInner} />
-              </View>
+            {isRecording && <RecordingIndicator seconds={recordSeconds} />}
+            <TouchableOpacity
+              style={styles.shutterBtn}
+              onPress={handleCapture}
+              activeOpacity={0.7}
+            >
+              {captureMode === "video" ? (
+                <View style={[styles.shutterOuter, isRecording && styles.shutterOuterRecording]}>
+                  {isRecording ? (
+                    <View style={styles.stopIcon} />
+                  ) : (
+                    <View style={styles.recordDot} />
+                  )}
+                </View>
+              ) : (
+                <View style={styles.shutterOuter}>
+                  <View style={styles.shutterInner} />
+                </View>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -418,7 +707,7 @@ export default function CreateScreen() {
               ]);
             }}
           >
-            <Ionicons name="close" size={28} color={Colors.white} />
+            <CloseSvg size={28} color={Colors.white} />
           </TouchableOpacity>
         </View>
 
@@ -426,7 +715,7 @@ export default function CreateScreen() {
         <View style={styles.bottomToolStrip}>
           <View style={styles.bottomToolItem}>
             <View style={styles.bottomToolThumbSmall}>
-              <Ionicons name="image-outline" size={14} color={Colors.muted} />
+              <GallerySvg size={14} color={Colors.muted} />
             </View>
           </View>
           <TouchableOpacity style={styles.bottomToolItem}>
@@ -440,7 +729,7 @@ export default function CreateScreen() {
           </TouchableOpacity>
           <View style={styles.bottomToolItem}>
             <View style={styles.bottomToolThumbSmall}>
-              <Ionicons name="sparkles" size={14} color={Colors.muted} />
+              <SparklesSvg size={14} color={Colors.muted} />
             </View>
           </View>
         </View>
@@ -807,6 +1096,50 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  // Capture mode toggle
+  captureModeRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 20,
+    marginBottom: 8,
+  },
+  captureModeBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  captureModeBtnActive: {},
+  captureModeText: {
+    color: "rgba(255,255,255,0.45)",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 1.5,
+  },
+  captureModeTextActive: {
+    color: Colors.white,
+  },
+
+  // Video recording shutter
+  shutterOuterRecording: {
+    borderColor: "#ef4444",
+  },
+  recordDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#ef4444",
+  },
+  stopIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    backgroundColor: "#ef4444",
+  },
+
+  // Disabled share button
+  shareBtnDisabled: {
+    opacity: 0.5,
   },
 });
 
