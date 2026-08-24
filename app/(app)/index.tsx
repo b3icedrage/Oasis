@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useAuth } from "../../lib/auth-context";
 import VideoPlayer from "../../components/VideoPlayer";
+import AddToStory from "../../components/AddToStory";
 import * as Haptics from "expo-haptics";
 import Svg, { Path } from "react-native-svg";
 
@@ -440,6 +441,7 @@ export default function HomeScreen() {
   const { profile } = useAuth();
   const [storyViewerVisible, setStoryViewerVisible] = useState(false);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
+  const [addStoryVisible, setAddStoryVisible] = useState(false);
 
   const openStory = (index: number) => {
     setActiveStoryIndex(index + 1); // +1 to skip "You" story
@@ -465,7 +467,14 @@ export default function HomeScreen() {
         <View style={styles.storiesBar}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {/* Your story */}
-            <TouchableOpacity style={styles.storyItem} activeOpacity={0.8}>
+            <TouchableOpacity
+              style={styles.storyItem}
+              activeOpacity={0.8}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setAddStoryVisible(true);
+              }}
+            >
               <View style={[styles.storyAvatar, styles.yourStory]}>
                 <Text style={styles.storyAvatarText}>
                   {profile?.displayName?.charAt(0)?.toUpperCase() || "?"}
@@ -594,6 +603,12 @@ export default function HomeScreen() {
         stories={[...MOCK_STORIES]}
         startIndex={activeStoryIndex}
         onClose={() => setStoryViewerVisible(false)}
+      />
+
+      {/* Add to Story */}
+      <AddToStory
+        visible={addStoryVisible}
+        onClose={() => setAddStoryVisible(false)}
       />
     </SafeAreaView>
   );
