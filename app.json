@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "scheme": "glitchit",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -43,26 +43,11 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow GlitchIt to access your camera for posting photos."
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "Allow GlitchIt to access your photos for posting."
-        }
-      ],
+      "expo-camera",
+      "expo-image-picker",
       "expo-media-library",
       "expo-av",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/notification-icon.png"
-        }
-      ]
+      "expo-haptics"
     ],
     "extra": {
       "router": {},
