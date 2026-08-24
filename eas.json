@@ -13,7 +13,11 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "GRADLE_OPTS": "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+        "GRADLE_OPTS": "-Xmx4g -XX:MaxMetaspaceSize=2g -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2 -Dandroid.enableLintVitalRelease=false",
+        "JAVA_OPTS": "-Xmx4g -XX:MaxMetaspaceSize=2g"
+      },
+      "android": {
+        "gradleCommand": "app:assembleRelease --no-daemon"
       }
     }
   },
