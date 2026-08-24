@@ -30,7 +30,11 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "extraGradleProperties": {
+        "org.gradle.jvmargs": "-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError",
+        "android.enableLintVitalRelease": "false"
+      }
     },
     "web": {
       "bundler": "metro",
