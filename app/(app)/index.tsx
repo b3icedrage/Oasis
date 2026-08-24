@@ -14,8 +14,11 @@ import {
 } from "react-native";
 import { useAuth } from "../../lib/auth-context";
 import VideoPlayer from "../../components/VideoPlayer";
+import * as Haptics from "expo-haptics";
+import Svg, { Path } from "react-native-svg";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+const REEL_CARD_WIDTH = SCREEN_WIDTH * 0.42;
 
 interface Comment {
   user: string;
@@ -142,6 +145,65 @@ const MOCK_POSTS: Post[] = [
     comments: [{ user: "NeonVortex", text: "Dope vibes ✨" }],
     timeAgo: "8h",
     liked: false,
+  },
+];
+
+// ─── Suggested Reels Data ───────────────────────────────────────
+interface Reel {
+  id: string;
+  thumbnail: string;
+  videoUri: string;
+  username: string;
+  userAvatar: string;
+  audioLabel: string;
+  views: string;
+}
+
+const MOCK_REELS: Reel[] = [
+  {
+    id: "r1",
+    thumbnail: "https://picsum.photos/400/700?random=301",
+    videoUri: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    username: "hanna_movies",
+    userAvatar: "H",
+    audioLabel: "hanna_movies · Original audio",
+    views: "1.9K",
+  },
+  {
+    id: "r2",
+    thumbnail: "https://picsum.photos/400/700?random=302",
+    videoUri: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+    username: "pixel_vortex",
+    userAvatar: "P",
+    audioLabel: "pixel_vortex · Neon Dreams",
+    views: "4.2K",
+  },
+  {
+    id: "r3",
+    thumbnail: "https://picsum.photos/400/700?random=303",
+    videoUri: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    username: "cosmic_reels",
+    userAvatar: "C",
+    audioLabel: "cosmic_reels · Glitch Beat",
+    views: "8.7K",
+  },
+  {
+    id: "r4",
+    thumbnail: "https://picsum.photos/400/700?random=304",
+    videoUri: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+    username: "void_studio",
+    userAvatar: "V",
+    audioLabel: "void_studio · Cyber Pulse",
+    views: "2.1K",
+  },
+  {
+    id: "r5",
+    thumbnail: "https://picsum.photos/400/700?random=305",
+    videoUri: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+    username: "static_dream",
+    userAvatar: "S",
+    audioLabel: "static_dream · VHS Vibes",
+    views: "12K",
   },
 ];
 
@@ -432,6 +494,89 @@ export default function HomeScreen() {
                   <Text style={styles.storyAvatarText}>{story.avatar}</Text>
                 </View>
                 <Text style={styles.storyName}>{story.username.slice(0, 8)}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* ─── Suggested Reels ──────────────────────────────────── */}
+        <View style={reelsStyles.section}>
+          <View style={reelsStyles.sectionHeader}>
+            <Text style={reelsStyles.sectionTitle}>Suggested reels</Text>
+            <TouchableOpacity style={reelsStyles.menuBtn}>
+              <Text style={reelsStyles.menuDots}>•••</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={reelsStyles.scrollContent}
+            snapToInterval={REEL_CARD_WIDTH + 12}
+            decelerationRate="fast"
+          >
+            {MOCK_REELS.map((reel) => (
+              <TouchableOpacity
+                key={reel.id}
+                style={reelsStyles.card}
+                activeOpacity={0.85}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
+              >
+                {/* Thumbnail */}
+                <Image
+                  source={{ uri: reel.thumbnail }}
+                  style={reelsStyles.thumbnail}
+                  resizeMode="cover"
+                />
+
+                {/* Play icon overlay */}
+                <View style={reelsStyles.playOverlay}>
+                  <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+                    <Path
+                      d="M8 5v14l11-7z"
+                      fill="rgba(255,255,255,0.9)"
+                      stroke="rgba(255,255,255,0.9)"
+                      strokeWidth="1"
+                      strokeLinejoin="round"
+                    />
+                  </Svg>
+                </View>
+
+                {/* View count */}
+                <View style={reelsStyles.viewBadge}>
+                  <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+                    <Path
+                      d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                      stroke="#fff"
+                      strokeWidth="2"
+                    />
+                    <circle cx="12" cy="12" r="3" stroke="#fff" strokeWidth="2" />
+                  </Svg>
+                  <Text style={reelsStyles.viewCount}>{reel.views}</Text>
+                </View>
+
+                {/* Duration badge */}
+                <View style={reelsStyles.durationBadge}>
+                  <Text style={reelsStyles.durationText}>0:{String(Math.floor(Math.random() * 50) + 10).padStart(2, "0")}</Text>
+                </View>
+
+                {/* Bottom info bar */}
+                <View style={reelsStyles.infoBar}>
+                  <View style={reelsStyles.infoLeft}>
+                    <View style={reelsStyles.miniAvatar}>
+                      <Text style={reelsStyles.miniAvatarText}>{reel.userAvatar}</Text>
+                    </View>
+                    <View style={reelsStyles.infoText}>
+                      <Text style={reelsStyles.reelUsername}>@{reel.username}</Text>
+                      <Text style={reelsStyles.audioLabel} numberOfLines={1}>♪ {reel.audioLabel}</Text>
+                    </View>
+                  </View>
+                  <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                    <Path d="M4 6h16M4 12h16M4 18h16" stroke="#888" strokeWidth="2" strokeLinecap="round" />
+                  </Svg>
+                </View>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -809,5 +954,134 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+});
+
+// ─── Suggested Reels Styles ──────────────────────────────────────
+const reelsStyles = StyleSheet.create({
+  section: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#1a1a2a",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#e0e0f0",
+  },
+  menuBtn: {
+    padding: 6,
+  },
+  menuDots: {
+    fontSize: 18,
+    color: "#888",
+    fontWeight: "700",
+    letterSpacing: 2,
+  },
+  scrollContent: {
+    paddingHorizontal: 12,
+    gap: 12,
+  },
+  card: {
+    width: REEL_CARD_WIDTH,
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "#131320",
+  },
+  thumbnail: {
+    width: REEL_CARD_WIDTH,
+    height: REEL_CARD_WIDTH * 1.6,
+    backgroundColor: "#1a1a2a",
+  },
+  playOverlay: {
+    position: "absolute",
+    top: REEL_CARD_WIDTH * 1.6 * 0.4,
+    left: REEL_CARD_WIDTH * 0.5 - 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  viewBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  viewCount: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  durationBadge: {
+    position: "absolute",
+    bottom: 48,
+    right: 8,
+    backgroundColor: "rgba(0,0,0,0.65)",
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  durationText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#fff",
+    fontVariant: ["tabular-nums"],
+  },
+  infoBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+  infoLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flex: 1,
+  },
+  miniAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#7c3aed",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "#a855f7",
+  },
+  miniAvatarText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  infoText: {
+    flex: 1,
+  },
+  reelUsername: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#e0e0f0",
+  },
+  audioLabel: {
+    fontSize: 10,
+    color: "#888",
+    marginTop: 1,
   },
 });
