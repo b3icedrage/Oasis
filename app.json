@@ -43,7 +43,6 @@
     },
     "plugins": [
       "expo-router",
-      "expo-updates",
       [
         "expo-camera",
         {
@@ -63,9 +62,6 @@
         }
       ]
     ],
-    "updates": {
-      "url": "https://u.expo.dev/390023bf-137a-43a2-a374-a32c46e260ab"
-    },
     "extra": {
       "router": {},
       "eas": {

@@ -23,7 +23,6 @@
     "expo-router": "~57.0.15",
     "expo-splash-screen": "~0.29.0",
     "expo-status-bar": "~57.0.1",
-    "expo-updates": "^57.0.16",
     "firebase": "^12.18.0",
     "react": "19.2.8",
     "react-native": "0.86.2",
