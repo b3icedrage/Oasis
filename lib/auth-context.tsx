@@ -14,6 +14,9 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
+// Gracefully handle Firebase not being initialized
+const isFirebaseReady = auth != null && db != null;
+
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface UserProfile {
@@ -55,24 +58,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen to Firebase auth state
   useEffect(() => {
+    if (!isFirebaseReady) {
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
-        const snap = await getDoc(doc(db, "users", firebaseUser.uid));
-        if (snap.exists()) {
-          const data = snap.data() as UserProfile;
-          // Auto-expire verification if past the date
-          if (
-            data.isVerified &&
-            data.verifiedUntil &&
-            data.verifiedUntil < Date.now()
-          ) {
-            await updateDoc(doc(db, "users", firebaseUser.uid), {
-              isVerified: false,
-            });
-            data.isVerified = false;
+        try {
+          const snap = await getDoc(doc(db, "users", firebaseUser.uid));
+          if (snap.exists()) {
+            const data = snap.data() as UserProfile;
+            // Auto-expire verification if past the date
+            if (
+              data.isVerified &&
+              data.verifiedUntil &&
+              data.verifiedUntil < Date.now()
+            ) {
+              await updateDoc(doc(db, "users", firebaseUser.uid), {
+                isVerified: false,
+              });
+              data.isVerified = false;
+            }
+            setProfile(data);
           }
-          setProfile(data);
+        } catch (e) {
+          console.warn("Failed to load user profile:", e);
         }
       } else {
         setProfile(null);
@@ -84,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = useCallback(
     async (email: string, password: string, displayName: string) => {
+      if (!isFirebaseReady) throw new Error("Firebase not initialized");
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       const userProfile: UserProfile = {
         uid: cred.user.uid,
@@ -101,19 +113,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback(
     async (email: string, password: string) => {
+      if (!isFirebaseReady) throw new Error("Firebase not initialized");
       await signInWithEmailAndPassword(auth, email, password);
     },
     [],
   );
 
   const signOut = useCallback(async () => {
+    if (!isFirebaseReady) throw new Error("Firebase not initialized");
     await firebaseSignOut(auth);
     setProfile(null);
   }, []);
 
   // Called after successful payment redirect — activates 1-month verification
   const activateVerification = useCallback(async (): Promise<boolean> => {
-    if (!user) return false;
+    if (!user || !isFirebaseReady) return false;
 
     const verifiedUntil = Date.now() + ONE_MONTH_MS;
     await updateDoc(doc(db, "users", user.uid), {

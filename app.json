@@ -55,6 +55,8 @@
           "photosPermission": "Allow GlitchIt to access your photos for posting."
         }
       ],
+      "expo-media-library",
+      "expo-av",
       [
         "expo-notifications",
         {

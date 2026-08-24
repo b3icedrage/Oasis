@@ -1,7 +1,6 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { getStorage } from "firebase/storage";
+import { initializeApp, type FirebaseApp } from "firebase/app";
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { getAuth, type Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBVjt-uis7rUfh4LSHnQxwA8otA13Oj_-M",
@@ -13,9 +12,22 @@ const firebaseConfig = {
   measurementId: "G-75V7YGZ9C5",
 };
 
-const app = initializeApp(firebaseConfig);
+let app: FirebaseApp;
+let db: Firestore;
+let auth: Auth;
 
-export const db = getFirestore(app);
-export const auth = getAuth(app);
-export const storage = getStorage(app);
+try {
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  auth = getAuth(app);
+} catch (error) {
+  // Firebase init failed — create fallback objects so the app doesn't crash
+  console.warn("Firebase init failed:", error);
+  // These will throw if actually called, but won't crash the app at startup
+  app = null as any;
+  db = null as any;
+  auth = null as any;
+}
+
+export { db, auth };
 export default app;
