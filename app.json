@@ -46,8 +46,7 @@
       "expo-camera",
       "expo-image-picker",
       "expo-media-library",
-      "expo-av",
-      "expo-haptics"
+      "expo-av"
     ],
     "extra": {
       "router": {},
