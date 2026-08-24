@@ -11,14 +11,44 @@ import {
   FlatList,
   ActivityIndicator,
 } from "react-native";
-import {
-  requestPermissionsAsync,
-  getAssetsAsync,
-  SortBy,
-  type Asset as MediaAsset,
-} from "expo-media-library/legacy";
-import * as Haptics from "expo-haptics";
 import Svg, { Path, Circle, Rect, Line } from "react-native-svg";
+
+// Safe native module imports
+let MediaLibrary: any = null;
+let SortBy: any = null;
+let Haptics: any = null;
+
+try {
+  MediaLibrary = require("expo-media-library/legacy");
+  SortBy = MediaLibrary.SortBy;
+} catch (e) {
+  console.warn("expo-media-library/legacy not available:", e);
+  // Try the main export as fallback
+  try {
+    MediaLibrary = require("expo-media-library");
+    SortBy = MediaLibrary.SortBy;
+  } catch (e2) {
+    console.warn("expo-media-library not available:", e2);
+  }
+}
+
+try {
+  Haptics = require("expo-haptics");
+} catch (e) {
+  console.warn("expo-haptics not available:", e);
+}
+
+function safeHaptic(style?: any) {
+  try {
+    if (Haptics) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  } catch {}
+}
+
+function safeHapticMedium() {
+  try {
+    if (Haptics) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  } catch {}
+}
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const GRID_COLUMNS = 3;
@@ -165,30 +195,52 @@ interface AddToStoryProps {
   onClose: () => void;
 }
 
+interface SimpleAsset {
+  uri: string;
+  id: string;
+  mediaType?: string;
+}
+
 export default function AddToStory({ visible, onClose }: AddToStoryProps) {
-  const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
+  const [mediaAssets, setMediaAssets] = useState<SimpleAsset[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
   // Request gallery permission and load recent photos
   const loadGallery = useCallback(async () => {
-    const { status } = await requestPermissionsAsync();
-    setHasPermission(status === "granted");
+    if (!MediaLibrary) {
+      // No media library available — just show empty state
+      setHasPermission(false);
+      return;
+    }
 
-    if (status !== "granted") return;
-
-    setLoading(true);
     try {
-      const result = await getAssetsAsync({
-        first: 60,
-        mediaType: ["photo", "video"],
-        sortBy: [SortBy.creationTime],
-      });
-      setMediaAssets(result.assets);
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      setHasPermission(status === "granted");
+
+      if (status !== "granted") return;
+
+      setLoading(true);
+      try {
+        const result = await MediaLibrary.getAssetsAsync({
+          first: 60,
+          mediaType: ["photo", "video"],
+          sortBy: SortBy ? [SortBy.creationTime] : undefined,
+        });
+        setMediaAssets(
+          (result.assets || []).map((a: any) => ({
+            uri: a.uri,
+            id: a.id,
+            mediaType: a.mediaType,
+          }))
+        );
+      } catch {
+        // Permission denied or error
+      } finally {
+        setLoading(false);
+      }
     } catch {
-      // Permission denied or error
-    } finally {
-      setLoading(false);
+      setHasPermission(false);
     }
   }, []);
 
@@ -198,34 +250,34 @@ export default function AddToStory({ visible, onClose }: AddToStoryProps) {
     }
   }, [visible, loadGallery]);
 
-  const handleAssetPress = (asset: MediaAsset) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleAssetPress = (asset: SimpleAsset) => {
+    safeHaptic();
     // TODO: navigate to story editor with selected asset
     onClose();
   };
 
   const handleCameraPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    safeHapticMedium();
     // TODO: open camera for story capture
     onClose();
   };
 
   const handleTemplatePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    safeHaptic();
     // TODO: open templates picker
   };
 
   const handleMusicPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    safeHaptic();
     // TODO: open music picker
   };
 
   const handleCollagePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    safeHaptic();
     // TODO: open collage maker
   };
 
-  const renderAsset = ({ item, index }: { item: MediaAsset; index: number }) => {
+  const renderAsset = ({ item, index }: { item: SimpleAsset; index: number }) => {
     // First cell is the camera button
     if (index === 0) {
       return (
@@ -241,7 +293,7 @@ export default function AddToStory({ visible, onClose }: AddToStoryProps) {
     return (
       <TouchableOpacity
         style={styles.assetCell}
-        onPress={() => handleAssetPress(item as any)}
+        onPress={() => handleAssetPress(item)}
         activeOpacity={0.85}
       >
         <Image source={{ uri: item.uri }} style={styles.assetImage} resizeMode="cover" />
@@ -312,7 +364,16 @@ export default function AddToStory({ visible, onClose }: AddToStoryProps) {
         </View>
 
         {/* ─── Gallery Grid ────────────────────────────────────── */}
-        {loading ? (
+        {!MediaLibrary ? (
+          <View style={styles.permissionContainer}>
+            <Text style={styles.permissionText}>
+              Gallery access is needed to add photos to your story.
+            </Text>
+            <Text style={[styles.permissionText, { marginTop: 8, fontSize: 13 }]}>
+              Please install expo-media-library to enable this feature.
+            </Text>
+          </View>
+        ) : loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#a855f7" />
             <Text style={styles.loadingText}>Loading gallery...</Text>
@@ -328,7 +389,7 @@ export default function AddToStory({ visible, onClose }: AddToStoryProps) {
           </View>
         ) : (
           <FlatList
-            data={[{ uri: "camera", id: "camera" } as any, ...mediaAssets]}
+            data={[{ uri: "camera", id: "camera" } as SimpleAsset, ...mediaAssets]}
             renderItem={renderAsset}
             keyExtractor={(item, index) => (item.id || item.uri) + "_" + index}
             numColumns={GRID_COLUMNS}

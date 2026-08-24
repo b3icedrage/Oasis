@@ -7,11 +7,35 @@ import {
   Dimensions,
   ActivityIndicator,
 } from "react-native";
-import { Video, ResizeMode } from "expo-av";
-import * as Haptics from "expo-haptics";
 import { Colors } from "../data/theme";
 import Svg, { Path } from "react-native-svg";
 
+// Safe native module imports — if they fail, app still launches
+let Video: any = null;
+let ResizeMode: any = null;
+let Haptics: any = null;
+
+try {
+  const av = require("expo-av");
+  Video = av.Video;
+  ResizeMode = av.ResizeMode;
+} catch (e) {
+  console.warn("expo-av not available:", e);
+}
+
+try {
+  Haptics = require("expo-haptics");
+} catch (e) {
+  console.warn("expo-haptics not available:", e);
+}
+
+function safeHaptic(style?: any) {
+  try {
+    if (Haptics) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  } catch {}
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -26,14 +50,6 @@ function PlayIcon({ size = 48 }: { size?: number }) {
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
-    </Svg>
-  );
-}
-
-function PauseIcon({ size = 48 }: { size?: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M6 4h4v16H6zM14 4h4v16h-4z" fill={Colors.white} />
     </Svg>
   );
 }
@@ -90,6 +106,39 @@ interface VideoPlayerProps {
   style?: object;
 }
 
+// Fallback component when expo-av is not available
+function VideoFallback({
+  posterUri,
+  width,
+  height,
+}: {
+  posterUri?: string;
+  width: number;
+  height: number;
+}) {
+  const { Image } = require("react-native");
+  return (
+    <View style={[{ width, height, backgroundColor: "#000" }]}>
+      {posterUri ? (
+        <Image
+          source={{ uri: posterUri }}
+          style={{ width, height }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ color: Colors.muted }}>Video unavailable</Text>
+        </View>
+      )}
+      <View style={styles.playOverlay}>
+        <View style={styles.playCircle}>
+          <PlayIcon size={40} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
 export default function VideoPlayer({
   uri,
   posterUri,
@@ -100,6 +149,11 @@ export default function VideoPlayer({
   showControls = true,
   style,
 }: VideoPlayerProps) {
+  // If expo-av is not available, show fallback
+  if (!Video || !ResizeMode) {
+    return <VideoFallback posterUri={posterUri} width={width} height={height} />;
+  }
+
   const videoRef = useRef<any>(null);
   const [status, setStatus] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
@@ -110,7 +164,7 @@ export default function VideoPlayer({
 
   const togglePlay = useCallback(async () => {
     if (!videoRef.current) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    safeHaptic();
 
     if (isPlaying) {
       await videoRef.current.pauseAsync();
@@ -125,7 +179,7 @@ export default function VideoPlayer({
 
   const toggleMute = useCallback(async () => {
     if (!videoRef.current) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    safeHaptic();
     await videoRef.current.setIsMutedAsync(!isMuted);
     setIsMuted(!isMuted);
   }, [isMuted]);
@@ -148,7 +202,7 @@ export default function VideoPlayer({
         ref={videoRef}
         source={{ uri }}
         style={[styles.video, { width, height }]}
-        resizeMode={ResizeMode.COVER}
+        resizeMode={ResizeMode?.COVER || "cover"}
         isLooping={loop}
         isMuted={isMuted}
         shouldPlay={autoPlay}

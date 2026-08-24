@@ -1,25 +1,42 @@
-import * as Haptics from 'expo-haptics';
+let Haptics: any = null;
+try {
+  Haptics = require("expo-haptics");
+} catch (e) {
+  // expo-haptics not available — no-op
+}
 
 export function lightImpact() {
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  try {
+    if (Haptics) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  } catch {}
 }
 
 export function mediumImpact() {
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  try {
+    if (Haptics) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  } catch {}
 }
 
 export function heavyImpact() {
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  try {
+    if (Haptics) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  } catch {}
 }
 
 export function successNotification() {
-  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  try {
+    if (Haptics) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  } catch {}
 }
 
 export function warningNotification() {
-  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  try {
+    if (Haptics) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  } catch {}
 }
 
 export function errorNotification() {
-  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+  try {
+    if (Haptics) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+  } catch {}
 }

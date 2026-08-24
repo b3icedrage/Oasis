@@ -16,7 +16,22 @@ import { useAuth } from "../../lib/auth-context";
 import { useRouter } from "expo-router";
 import VideoPlayer from "../../components/VideoPlayer";
 import AddToStory from "../../components/AddToStory";
-import * as Haptics from "expo-haptics";
+// Safe haptics import
+let Haptics: any = null;
+try {
+  Haptics = require("expo-haptics");
+} catch {}
+
+function safeHaptic() {
+  try {
+    if (Haptics) safeHaptic();
+  } catch {}
+}
+function safeHapticMedium() {
+  try {
+    if (Haptics) safeHapticMedium();
+  } catch {}
+}
 import Svg, { Path, Line, Circle } from "react-native-svg";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -464,7 +479,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={styles.headerBtn}
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              safeHaptic();
               router.push("/(app)/create");
             }}
           >
@@ -487,7 +502,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={styles.headerBtn}
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              safeHaptic();
               router.push("/(app)/activity");
             }}
           >
@@ -513,7 +528,7 @@ export default function HomeScreen() {
               style={styles.storyItem}
               activeOpacity={0.8}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                safeHapticMedium();
                 setAddStoryVisible(true);
               }}
             >
@@ -572,7 +587,7 @@ export default function HomeScreen() {
                 style={reelsStyles.card}
                 activeOpacity={0.85}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  safeHaptic();
                 }}
               >
                 {/* Thumbnail */}

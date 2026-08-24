@@ -12,23 +12,49 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { CameraView, useCameraPermissions } from "expo-camera";
-import * as Haptics from "expo-haptics";
+// Safe native module imports
+let CameraView: any = null;
+let useCameraPermissions: any = null;
+let Haptics: any = null;
+
+try {
+  const cam = require("expo-camera");
+  CameraView = cam.CameraView;
+  useCameraPermissions = cam.useCameraPermissions;
+} catch (e) {
+  console.warn("expo-camera not available:", e);
+}
+
+try {
+  Haptics = require("expo-haptics");
+} catch (e) {
+  console.warn("expo-haptics not available:", e);
+}
+
+function safeHaptic(style?: any) {
+  try {
+    if (Haptics) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  } catch {}
+}
+function safeHapticMedium() {
+  try {
+    if (Haptics) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  } catch {}
+}
+function safeHapticHeavy() {
+  try {
+    if (Haptics) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  } catch {}
+}
+function safeNotification(type?: any) {
+  try {
+    if (Haptics) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  } catch {}
+}
 import { Colors } from "../../data/theme";
 import { uploadVideo, uploadImage, UploadProgress } from "../../lib/r2";
 import {
-  HomeIcon,
-  SearchIcon,
-  BoltIcon,
-  BellIcon,
-  UserIcon,
-  PlusIcon,
   ChevronDown,
-  HeartIcon,
-  SearchIcon as SearchSvg,
-  BoltIcon as BoltSvg,
-  BellIcon as BellSvg,
-  UserIcon as UserSvg,
 } from "../../components/Icons";
 import Svg, { Path, Circle, Rect, Line } from "react-native-svg";
 
@@ -317,22 +343,22 @@ export default function CreateScreen() {
   const recordingRef = useRef<any>(null);
 
   const toggleFlash = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    safeHaptic();
     setFlash((prev) => (prev === "off" ? "on" : prev === "on" ? "auto" : "off"));
   }, []);
 
   const toggleNight = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    safeHaptic();
     setNightMode((prev) => !prev);
   }, []);
 
   const toggleCamera = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    safeHapticMedium();
     setFrontCamera((prev) => !prev);
   }, []);
 
   const handleCapture = useCallback(async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    safeHapticHeavy();
     if (!cameraRef.current) return;
 
     // Video recording toggle
@@ -344,7 +370,7 @@ export default function CreateScreen() {
           const video = await recordingRef.current?.stopAsync();
           if (video?.uri) {
             setCapturedUri(video.uri);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            safeNotification();
           }
         } catch {}
         setIsRecording(false);
@@ -375,7 +401,7 @@ export default function CreateScreen() {
       });
       if (photo?.uri) {
         setCapturedUri(photo.uri);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        safeNotification();
       }
     } catch {
       // Camera capture failed — still usable for demo
@@ -434,7 +460,7 @@ export default function CreateScreen() {
                 const isVideo = capturedUri?.includes(".mp4") || capturedUri?.includes("video");
                 const uploadFn = isVideo ? uploadVideo : uploadImage;
                 const result = await uploadFn(capturedUri!, (p) => setUploadProgress(p));
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                safeNotification();
                 Alert.alert("Shared!", "Your glitch art has been uploaded!", [
                   { text: "OK", onPress: () => setCapturedUri(null) },
                 ]);
