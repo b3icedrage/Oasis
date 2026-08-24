@@ -13,6 +13,7 @@ import {
   Animated,
 } from "react-native";
 import { useAuth } from "../../lib/auth-context";
+import VideoPlayer from "../../components/VideoPlayer";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -26,6 +27,7 @@ interface Post {
   username: string;
   userAvatar: string;
   image: string;
+  videoUri?: string;
   likes: number;
   comments: Comment[];
   timeAgo: string;
@@ -98,6 +100,7 @@ const MOCK_POSTS: Post[] = [
     username: "CosmicGlitcher",
     userAvatar: "C",
     image: "https://picsum.photos/600/600?random=1",
+    videoUri: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     likes: 2345,
     comments: [
       { user: "UserOne", text: "Love this effect! #glitchart" },
@@ -121,6 +124,7 @@ const MOCK_POSTS: Post[] = [
     username: "VoidPixel",
     userAvatar: "V",
     image: "https://picsum.photos/600/600?random=3",
+    videoUri: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
     likes: 5678,
     comments: [
       { user: "CosmicGlitcher", text: "Incredible work!" },
@@ -315,12 +319,26 @@ function PostCard({ post }: { post: Post }) {
       </View>
 
       <View style={styles.postImageContainer}>
-        <Image
-          source={{ uri: post.image }}
-          style={styles.postImage}
-          resizeMode="cover"
-        />
-        <View style={styles.glitchOverlay} />
+        {post.videoUri ? (
+          <VideoPlayer
+            uri={post.videoUri}
+            posterUri={post.image}
+            width={SCREEN_WIDTH}
+            height={SCREEN_WIDTH}
+            autoPlay={false}
+            loop={true}
+            showControls={true}
+          />
+        ) : (
+          <>
+            <Image
+              source={{ uri: post.image }}
+              style={styles.postImage}
+              resizeMode="cover"
+            />
+            <View style={styles.glitchOverlay} />
+          </>
+        )}
       </View>
 
       <View style={styles.postActions}>
