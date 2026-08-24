@@ -12,8 +12,6 @@ import * as Haptics from "expo-haptics";
 import { Colors } from "../data/theme";
 import Svg, { Path } from "react-native-svg";
 
-// expo-av Video types are incompatible with React 19 — use any for the component
-declare const ExpoVideo: any;
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -146,7 +144,7 @@ export default function VideoPlayer({
 
   return (
     <View style={[{ width, height }, style]}>
-      <ExpoVideo
+      <Video
         ref={videoRef}
         source={{ uri }}
         style={[styles.video, { width, height }]}
