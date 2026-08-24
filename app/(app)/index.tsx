@@ -13,10 +13,11 @@ import {
   Animated,
 } from "react-native";
 import { useAuth } from "../../lib/auth-context";
+import { useRouter } from "expo-router";
 import VideoPlayer from "../../components/VideoPlayer";
 import AddToStory from "../../components/AddToStory";
 import * as Haptics from "expo-haptics";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Path, Line, Circle } from "react-native-svg";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 const REEL_CARD_WIDTH = SCREEN_WIDTH * 0.42;
@@ -448,6 +449,8 @@ export default function HomeScreen() {
     setStoryViewerVisible(true);
   };
 
+  const router = useRouter();
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -455,12 +458,51 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
+        {/* Header — Instagram-style top bar */}
         <View style={styles.header}>
-          <View style={styles.logoRow}>
+          {/* Left: Create (+) button */}
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push("/(app)/create");
+            }}
+          >
+            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+              <Line x1="12" y1="5" x2="12" y2="19" stroke="#e0e0f0" strokeWidth="2.5" strokeLinecap="round" />
+              <Line x1="5" y1="12" x2="19" y2="12" stroke="#e0e0f0" strokeWidth="2.5" strokeLinecap="round" />
+            </Svg>
+          </TouchableOpacity>
+
+          {/* Center: App name with chevron */}
+          <TouchableOpacity style={styles.headerCenter} activeOpacity={0.7}>
             <Text style={styles.logoGlitch}>Glitch</Text>
             <Text style={styles.logoIt}>It</Text>
-          </View>
+            <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 4, marginTop: 2 }}>
+              <Path d="M6 9l6 6 6-6" stroke="#e0e0f0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </Svg>
+          </TouchableOpacity>
+
+          {/* Right: Heart/Activity with notification badge */}
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push("/(app)/activity");
+            }}
+          >
+            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
+                stroke="#e0e0f0"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+            {/* Red notification dot */}
+            <View style={styles.notifDot} />
+          </TouchableOpacity>
         </View>
 
         {/* Stories bar */}
@@ -772,14 +814,25 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   header: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingTop: 12,
     paddingBottom: 12,
+    paddingHorizontal: 14,
     borderBottomWidth: 1,
     borderBottomColor: "#1a1a2a",
   },
-  logoRow: {
+  headerBtn: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  headerCenter: {
     flexDirection: "row",
+    alignItems: "center",
   },
   logoGlitch: {
     fontSize: 26,
@@ -792,6 +845,17 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#7c3aed",
     letterSpacing: -1,
+  },
+  notifDot: {
+    position: "absolute",
+    top: 6,
+    right: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#ef4444",
+    borderWidth: 1.5,
+    borderColor: "#07070d",
   },
 
   // Stories

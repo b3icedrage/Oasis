@@ -5,7 +5,6 @@ import { Colors } from "../../data/theme";
 import {
   HomeIcon,
   SearchIcon,
-  PlusIcon,
   BoltIcon,
   BellIcon,
   UserIcon,
@@ -20,14 +19,6 @@ function TabIcon({
 }) {
   const active = Colors.text;
   const inactive = Colors.muted;
-
-  if (name === "Create") {
-    return (
-      <View style={styles.createButton}>
-        <PlusIcon size={22} color="#fff" />
-      </View>
-    );
-  }
 
   const iconMap: Record<string, React.ReactNode> = {
     Home: <HomeIcon size={22} color={focused ? active : inactive} />,
@@ -77,10 +68,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="create"
         options={{
-          title: "Create",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="Create" focused={focused} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
@@ -134,14 +122,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     height: 26,
   },
-  createButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: Colors.purple,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: Colors.purple + "80",
-  },
+
 });
