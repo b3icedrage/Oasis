@@ -7,6 +7,7 @@ function TabIcon({ name, focused }: { name: string; focused: boolean }) {
     Home: "🏠",
     Explore: "🔍",
     Create: "＋",
+    Glitches: "⚡",
     Activity: "💜",
     Profile: "👤",
   };
@@ -64,6 +65,15 @@ export default function AppLayout() {
           title: "Create",
           tabBarIcon: ({ focused }) => (
             <TabIcon name="Create" focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="glitches"
+        options={{
+          title: "Glitches",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name="Glitches" focused={focused} />
           ),
         }}
       />

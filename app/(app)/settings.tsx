@@ -112,7 +112,7 @@ export default function SettingsScreen() {
           onPress={handleGetVerified}
           activeOpacity={0.8}
         >
-          <Text style={styles.verifyButtonText}>Get Verified — KES 499/mo</Text>
+          <Text style={styles.verifyButtonText}>Get Verified — $4.99/mo</Text>
           <Text style={styles.verifyButtonSub}>
             Get a blue tick badge on your profile
           </Text>
