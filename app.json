@@ -15,7 +15,11 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.glitchit.app"
+      "bundleIdentifier": "com.glitchit.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow GlitchIt to access your camera for posting photos.",
+        "NSMicrophoneUsageDescription": "Allow GlitchIt to access your microphone for recording videos."
+      }
     },
     "android": {
       "adaptiveIcon": {
