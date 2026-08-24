@@ -170,6 +170,31 @@ export function UsersIcon({ size = 18, color = '#6b6b8a' }: IconProps) {
   );
 }
 
+/** Plus/add icon */
+export function PlusIcon({ size = 24, color = '#fff' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Line x1="12" y1="5" x2="12" y2="19" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+      <Line x1="5" y1="12" x2="19" y2="12" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+/** Flash/lightning bolt for activity */
+export function ZapIcon({ size = 22, color = '#6b6b8a' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 /** Verified badge checkmark */
 export function VerifiedBadge({ size = 14, color = '#00e5ff' }: IconProps) {
   return (

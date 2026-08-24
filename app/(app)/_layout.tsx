@@ -1,30 +1,43 @@
 import { Redirect, Tabs } from "expo-router";
 import { useAuth } from "../../lib/auth-context";
-import { Text, View, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { Colors } from "../../data/theme";
+import {
+  HomeIcon,
+  SearchIcon,
+  PlusIcon,
+  BoltIcon,
+  BellIcon,
+  UserIcon,
+} from "../../components/Icons";
 
-function TabIcon({ name, focused }: { name: string; focused: boolean }) {
-  const icons: Record<string, string> = {
-    Home: "🏠",
-    Explore: "🔍",
-    Create: "＋",
-    Glitches: "⚡",
-    Activity: "💜",
-    Profile: "👤",
-  };
+function TabIcon({
+  name,
+  focused,
+}: {
+  name: string;
+  focused: boolean;
+}) {
+  const active = Colors.text;
+  const inactive = Colors.muted;
 
   if (name === "Create") {
     return (
       <View style={styles.createButton}>
-        <Text style={styles.createIcon}>＋</Text>
+        <PlusIcon size={22} color="#fff" />
       </View>
     );
   }
 
-  return (
-    <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>
-      {icons[name] || "•"}
-    </Text>
-  );
+  const iconMap: Record<string, React.ReactNode> = {
+    Home: <HomeIcon size={22} color={focused ? active : inactive} />,
+    Explore: <SearchIcon size={22} color={focused ? active : inactive} />,
+    Glitches: <BoltIcon size={22} color={focused ? active : inactive} />,
+    Activity: <BellIcon size={22} color={focused ? active : inactive} />,
+    Profile: <UserIcon size={22} color={focused ? active : inactive} />,
+  };
+
+  return <View style={styles.iconWrap}>{iconMap[name] || null}</View>;
 }
 
 export default function AppLayout() {
@@ -38,8 +51,8 @@ export default function AppLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: "#e0e0e0",
-        tabBarInactiveTintColor: "#555",
+        tabBarActiveTintColor: Colors.text,
+        tabBarInactiveTintColor: Colors.muted,
         tabBarLabelStyle: styles.tabLabel,
       }}
     >
@@ -47,7 +60,9 @@ export default function AppLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ focused }) => <TabIcon name="Home" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name="Home" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -114,27 +129,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: 0.3,
   },
-  tabIcon: {
-    fontSize: 22,
-    opacity: 0.5,
-  },
-  tabIconActive: {
-    opacity: 1,
+  iconWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    height: 26,
   },
   createButton: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "#7c3aed",
+    backgroundColor: Colors.purple,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "#a855f7",
-  },
-  createIcon: {
-    fontSize: 26,
-    color: "#fff",
-    fontWeight: "300",
-    marginTop: -2,
+    borderColor: Colors.purple + "80",
   },
 });
